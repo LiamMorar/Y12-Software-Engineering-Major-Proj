@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Panel</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="header"></div>
+    <br><br><br>
+    <div>
+        <form id="addForm" method="POST" action="server.php">
+            <input type="text" name="disorderName" placeholder="name" required>
+            <textarea name="description" placeholder="description" required></textarea>
+            <input type="text" name="tags" placeholder="tags (comma separated no spaces between commas tho)">
+            <button type="submit" name="addDisorder">Add Disorder</button>
+        </form>
+    </div>
+    <script src="scripts.js"></script>
+</body>
+</html>

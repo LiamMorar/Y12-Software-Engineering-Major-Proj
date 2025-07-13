@@ -1,0 +1,62 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Disorder View</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="header"></div>
+
+    <main>
+        <h1 class="disorderTtle" id="disorderTitle"></h1>
+
+        <div id="editorToolbar" class="toolbar" style="display:none;">
+            <button data-cmd="bold"><b>B</b></button>
+            <button data-cmd="it"><i>I</i></button>
+            <button data-cmd="ul"><u>U</u></button>
+            <button data-cmd="ulist">. List</button>
+            <button id="imgBtn">Image</button>
+            <button id="vidBtn">Video</button>
+            <button id="addDivBtn">Create Div</button>
+        </div>
+
+        <aside id="divPalette" class="div-palette" style="display:none;">
+            <h4>My Div Templates</h4>
+            <div id="pItems"></div>
+        </aside>
+
+        <div id="divModal" class="modal" style="display:none;">
+            <div class="modal-content">
+                <h3>Create Div Template</h3>
+                <label>
+                    Name:<br>
+                    <input type="text" id="divSelector" placeholder="My Div">
+                </label>
+                <label>CSS Style:</label>
+                <textarea id="divStyles" placeholder="e.g. background: #eee; padding: 10px;"></textarea>
+                <div class="modal-actions">
+                    <button id="saveDivDef">Save</button>
+                    <button id="cancelDivDef">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+
+        <div id="disorderDescription" class="editable" contenteditable="false"></div>
+
+        <p><strong>Tags:</strong> <span id="disorderTags"></span></p>
+        <button id="editBtn">Edit</button>
+    </main>
+
+    <div id="divToolbar" style="display:none; position:absolute; z-index:1000;">
+        <button id="tbUp">↑</button>
+        <button id="tbDown">↓</button>
+        <button id="tbDel">✕</button>
+    </div>
+
+
+    <script src="scripts.js"></script>
+</body>
+
+</html>
