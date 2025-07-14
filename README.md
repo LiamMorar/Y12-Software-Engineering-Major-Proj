@@ -48,12 +48,12 @@ you don't, you need the DB
 
 ### Pages I made (none of them are finished)
 - [x] index.html
-- [ ] login.html
-- [ ] register.html
+- [x] login.html
+- [x] register.html
 - [x] search.html
 - [x] post/admin.html (like a page for like >creating entries)
 - [x] disorder.html (like the page for the disorder entries)
-- [ ] header.html
+- [x] header.html
 - [ ] footer.html
  
 ### Task List
@@ -65,8 +65,8 @@ you don't, you need the DB
 - **Accounts**
     - [x] Register function
     - [x] Login function
-    - [ ] Register page
-    - [ ] Login page
+    - [x] Register page
+    - [x] Login page
     - [ ] Roles and access 
     - [ ] Settings
     - [ ] Account management page

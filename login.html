@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="header"></div>
+
+    <main>
+        <h1>Login</h1>
+        <form id="loginForm">
+            <label for="loginUsername">Username</label>
+            <input type="text" id="loginUsername" name="username" required>
+
+            <label for="loginPassword">Password</label>
+            <input type="password" id="loginPassword" name="password" required>
+
+            <button type="submit">Log In</button>
+        </form>
+        <p id="loginError" class="error-message"></p>
+        <p>Don't have an account? <a href="register.html">Register here</a>.</p>
+    </main>
+
+    <script src="scripts.js"></script>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', e => {
+            e.preventDefault();
+            var user = document.getElementById('loginUsername').value.trim();
+            var pass = document.getElementById('loginPassword').value;
+
+            console.log(login(user, pass));
+        });
+    </script>
+</body>
+</html>

@@ -25,6 +25,20 @@ function sendReposne($status, $message) {
     exit;
 }
 
+function getUDat(){
+    if (isset($_SESSION['user_id'])) {
+        $UID = $_SESSION['user_id'];
+        global $mysqli;
+        $stmt = $mysqli->query("SELECT * FROM users WHERE U_id = '$UID'");
+        $userData = $stmt->fetch_assoc();
+        if ($userData) {
+            return $userData;
+        } else {
+            return false;
+        }
+    }
+}
+
 if (isset($_GET['search'])) {
     $search = $mysqli->real_escape_string($_GET['search']);
     $result = $mysqli->query("SELECT id, name FROM disorders WHERE name LIKE '%$search%'");
@@ -95,23 +109,27 @@ if (isset($_GET['getDisorder'])){
 }
 
 if (isset($_POST['editDisorder'])){
-    $disid = intval($_POST['disorderId']);
-    $name = $mysqli->real_escape_string($_POST['title']);
-    $desc = $mysqli->real_escape_string($_POST['desc']);
-    $mysqli->query("UPDATE disorders SET name = '$name', description = '$desc' WHERE id = '$disid'");
-    $mysqli->query("DELETE FROM disorder_tags WHERE disorderId = '$disid'");
+    $userData = getUDat();
+    if ($userData != false) { 
+        if ($userData['permission'] > 1) {
+            $disid = intval($_POST['disorderId']);
+            $name = $mysqli->real_escape_string($_POST['title']);
+            $desc = $mysqli->real_escape_string($_POST['desc']);
+            $mysqli->query("UPDATE disorders SET name = '$name', description = '$desc' WHERE id = '$disid'");
+            $mysqli->query("DELETE FROM disorder_tags WHERE disorderId = '$disid'");
 
-    if (!empty($_POST['tags'])) {
-        $tags = explode(',', $_POST['tags']);
-        foreach ($tags as $tag) {
-            $t = trim($mysqli->real_escape_string($tag));
-            if ($t !== '') {
-                $mysqli->query("INSERT INTO disorder_tags (disorderId, tag) VALUES ('$disid', '$t')");
+            if (!empty($_POST['tags'])) {
+                $tags = explode(',', $_POST['tags']);
+                foreach ($tags as $tag) {
+                    $t = trim($mysqli->real_escape_string($tag));
+                    if ($t !== '') {
+                        $mysqli->query("INSERT INTO disorder_tags (disorderId, tag) VALUES ('$disid', '$t')");
+                    }
+                }
             }
+            sendReposne('success', 'edi');  
         }
     }
-
-    sendReposne('success', 'edi');
 }
 
 if (isset($_POST['register'])) {
@@ -120,15 +138,13 @@ if (isset($_POST['register'])) {
     $pw = $_POST['password'];
 
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        sendReposne('error', 'invalid email format');
+        sendReposne('fail', 'invalid email format');
     }
     if (strlen($pw) < 8) {
-        sendReposne('error', 'password must be at least 8 characters');
+        sendReposne('fail', 'password must be at least 8 characters');
     }
 
-    $stmt = $mysqli->prepare(
-        "INSERT INTO users (Username, Email, pasword) VALUES (?, ?, ?)"
-    );
+    $stmt = $mysqli->prepare("INSERT INTO users (Username, Email, pasword) VALUES (?, ?, ?)");
     $hashed = password_hash($pw, PASSWORD_DEFAULT);
     $stmt->bind_param('sss', $uname, $email, $hashed);
 
@@ -140,24 +156,37 @@ if (isset($_POST['register'])) {
     }
 }
 
-
 if (isset($_POST['login'])) {
     $uname = trim($_POST['username']);
-    $pw    = $_POST['password'];
-    
-    $query = "SELECT U_id, Username, pasword FROM users WHERE Username = $uname";
-    
-    $reslt = $mysqli->query($query);
+    $pw = $_POST['password'];
 
-    sendReposne('success', $reslt);
-
-    if ($stmt->num_rows === 1) {
-        if (true) {
-            $_SESSION['user_id'] = $reslt;
-            sendReposne('success', $reslt);
+    $stmt = $mysqli->query("SELECT * FROM users WHERE Username = '$uname'");
+    $userData = $stmt->fetch_assoc();
+    if ($userData) {
+        if (password_verify($pw, $userData['pasword'])) {
+            $_SESSION['user_id'] = $userData['U_id'];
+            sendReposne('success','Login successful');
+        } else {
+            sendReposne('error', $userData['pasword']);
+        }
+    } else{
+        sendReposne('error', 'Invalid username or password');
+    }
+    $stmt->close();
+    exit;
+}
+if (isset($_GET['logged_in'])) {
+    if (isset($_SESSION['user_id'])) {
+        $UID = $_SESSION['user_id'];
+        $stmt = $mysqli->query("SELECT * FROM users WHERE U_id = '$UID'");
+        $userData = $stmt->fetch_assoc();
+        if ($userData) {
+            sendReposne('success', json_encode($userData));
+        } else {
+            sendReposne('error', $UID);   
         }
     } else {
-        sendReposne('error', 'Invalid credentials');
+        sendReposne('fail', 'Failed to login');
     }
 }
 ?>
