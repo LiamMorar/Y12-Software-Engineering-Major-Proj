@@ -306,4 +306,10 @@ if (isset($_GET['logged_in'])) {
 if (isset($_GET['logout'])){
     session_destroy();
 }
+
+if (isset($_POST['usersettings'])){
+    $userData = getUDat();
+    $updatesetts = $_POST['settings'];
+    
+}
 ?>

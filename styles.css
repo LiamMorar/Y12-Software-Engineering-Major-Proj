@@ -302,3 +302,10 @@ footer {
                 flex-direction: column;
                 gap: 20px;
             }
+
+.logout-button {
+    background-color:#e61e1e;
+}
+.logout-button:hover {
+    background-color: #b31010;
+}

@@ -21,6 +21,9 @@ async function loginTest() {
                 if (user.permission > 1 && !document.getElementById('adminheaderbut')) {
                     document.getElementsByClassName('navlinks')[0].innerHTML += '<li><a id="adminheaderbut" href="admin.html">Admin</a></li>'
                 }
+                if (window.location.href.includes('account.html')) {
+                    loadsettings();
+                }
                 return true;
             } else if (data.status === 'fail') {
                 if (document.getElementsByClassName('testLogin').length > 0) {
@@ -627,4 +630,19 @@ function register(username, email, password) {
 
 function logout() {
     fetch('server.php?logout=1');
+}
+
+var doSettOnce = false;
+
+function loadsettings() {
+    if (user && !doSettOnce) {
+        //console.log('loafsettings')
+        settings = JSON.parse(user.settings);
+        Object.keys(settings).forEach((setting, sIndex) => {
+            console.log(setting)
+            console.log(settings[setting])
+            document.getElementsByTagName('main')[0].innerHTML += `<br><label for="settingNum${sIndex}">${setting}</label> <input id="settingNum${sIndex}" value="${settings[setting]}" />`
+        })
+        doSettOnce = true;
+    }
 }

@@ -51,7 +51,7 @@ you don't, you need the DB
 - [x] login.html
 - [x] register.html
 - [x] search.html
-- [x] post/admin.html (like a page for like >creating entries)
+- [x] post/admin.html (like a page for like creating entries)
 - [x] disorder.html (like the page for the disorder entries)
 - [x] header.html
 - [ ] footer.html
@@ -87,8 +87,8 @@ you don't, you need the DB
 
 ```mermaid
 pie title Percentage done
-"Done" : 7
-"TBD" : 22
+"Done" : 11
+"TBD" : 18
 ```
 
 ### Testing and Debugging
