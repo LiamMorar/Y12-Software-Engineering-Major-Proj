@@ -71,9 +71,9 @@ you don't, you need the DB
     - [ ] Settings
     - [ ] Account management page
 - **Entries**
-    - [ ] Deleting entries
+    - [x] Deleting entries
     - [x] Improved editing
-    - [ ] Improved creating entries
+    - [x] Improved creating entries
     - [ ] Resize controls for stuff 
 - **Other Stuff**
     - [ ] Reactive layout

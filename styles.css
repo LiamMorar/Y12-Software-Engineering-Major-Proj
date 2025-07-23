@@ -38,6 +38,7 @@ body {
         text-decoration: none;
         font-weight: 500;
         transition: color 0.2s ease;
+        font-size:20px;
     }
 
         .navlinks a:hover {
@@ -47,7 +48,7 @@ body {
 main {
     max-width: 800px;
     background: #ffffff;
-    margin: 100px auto 40px auto;
+    margin: 20px auto 40px auto;
     padding: 40px;
     border-radius: 6px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
@@ -256,3 +257,48 @@ footer {
     margin-top: 8px;
     min-height: 1.2em;
 }
+
+.disorder-entry {
+    display:flex;
+    height: 100px;
+    box-shadow: 2px 2px 5px rgb(200,200,200);
+    transition:box-shadow 0.1s;
+}
+
+.disorder-entry:hover {
+    box-shadow: 5px 5px 5px rgb(200,200,200);
+}
+
+    .disorder-entry a {
+        padding: 20px;
+        text-decoration: none;
+        color: black;
+        height:calc(100% - 40px);
+        width:100%;
+    }
+    .disorder-entry ul {
+        width:300px;
+        margin-right:10px;
+        overflow-x:scroll;
+        list-style:none;
+    }
+
+        .disorder-entry ul::-webkit-scrollbar {
+            display:none;
+        }
+
+        .disorder-entry ul li {
+            width: 100%;
+            white-space: nowrap;
+        }
+
+            .disorder-entry ul li .tag {
+                height: 20px;
+                padding: 0px 5px;
+            }
+
+            #results {
+                display: flex;
+                flex-direction: column;
+                gap: 20px;
+            }

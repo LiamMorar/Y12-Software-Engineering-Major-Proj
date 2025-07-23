@@ -39,13 +39,6 @@ function getUDat(){
     }
 }
 
-if (isset($_GET['search'])) {
-    $search = $mysqli->real_escape_string($_GET['search']);
-    $result = $mysqli->query("SELECT id, name FROM disorders WHERE name LIKE '%$search%'");
-    echo json_encode($result->fetch_all(MYSQLI_ASSOC));
-    exit;
-}
-
 if (isset($_GET['tags'])) {
     $result = $mysqli->query("SELECT DISTINCT tag FROM disorder_tags");
     $tags = [];
@@ -56,56 +49,93 @@ if (isset($_GET['tags'])) {
     exit;
 }
 
-if (isset($_GET['tag'])) {
-    $tag = $mysqli->real_escape_string($_GET['tag']);
-    $query = "
-      SELECT d.id, d.name
-      FROM disorders d
-      JOIN disorder_tags t ON d.id = t.disorderId
-      WHERE t.tag = '$tag'
-    ";
-    $result = $mysqli->query($query);
-    echo json_encode($result->fetch_all(MYSQLI_ASSOC));
-    exit;
-}
-
 if (isset($_POST['addDisorder'])) {
     $name = $mysqli->real_escape_string($_POST['disorderName']);
     $desc = $mysqli->real_escape_string($_POST['description']);
     $tags = explode(',', $_POST['tags']);
-    $mysqli->query("INSERT INTO disorders (name, description) VALUES ($name, $desc)");
+    $mysqli->query("INSERT INTO disorders (name, description) VALUES ('$name', '$desc')");
     $disorderId = $mysqli->insert_id;
     foreach ($tags as $tag) {
       $tag = trim($mysqli->real_escape_string($tag));
       if ($tag) {
-        $mysqli->query("INSERT INTO disorder_tags (disorderId, tag) VALUES ($disorderId, $tag)");
+        $mysqli->query("INSERT INTO disorder_tags (disorderId, tag) VALUES ('$disorderId', '$tag')");
       }
     }
     header("Location: index.html");
     exit;
 }
 
-if (isset($_GET['getDisorder'])){
-    $id = intval($_GET['getDisorder']);
-    $stmt = $mysqli->prepare("SELECT name, description FROM disorders WHERE id = ?");
-    $stmt->bind_param("i", $id);
-    $stmt->execute();
-    $stmt->bind_result($name, $description);
-    $respons = [];
-    if ($stmt->fetch()) {
-        $respons['name'] = $name;
-        $respons['desc'] = $description;
-    } else {
-        echo json_encode(["error" => "Disorder not found."]);
-    }
+function getDisorder($fQuery) {
+    global $mysqli;
+    $stmt = $mysqli->query($fQuery);
+    $respons = $stmt->fetch_assoc();
     $stmt->close();
-
+    $id = $respons["id"];
     $result = $mysqli->query("SELECT tag FROM disorder_tags WHERE disorderId = '$id'");
     $tags = [];
     while ($row = $result->fetch_assoc()) {
         $tags[] = $row;
     }
-    echo json_encode(["name" => $respons['name'], "description" => $respons['desc'], "tags" => json_encode($tags)]);
+    echo json_encode(["name" => $respons['name'], "description" => $respons['description'], "tags" => json_encode($tags)]);
+}
+
+function getAllDisorder($fQuery) {
+    global $mysqli;
+    $stmt = $mysqli->query($fQuery);
+    $respons = $stmt->fetch_all(MYSQLI_ASSOC);
+    $entries =[];
+    foreach ($respons as $dis){
+        $id = $dis["id"];
+        $result = $mysqli->query("SELECT tag FROM disorder_tags WHERE disorderId = '$id'");
+        $tags = [];
+        while ($row = $result->fetch_assoc()) {
+            $tags[] = $row;
+        }
+        array_push($entries,json_encode(["name" => $dis['name'], "id" => $dis['id'], "tags" => json_encode($tags)]));
+    }
+/*    $stmt->close();
+    $id = $respons["id"];
+    $result = $mysqli->query("SELECT tag FROM disorder_tags WHERE disorderId = '$id'");
+    $tags = [];
+    while ($row = $result->fetch_assoc()) {
+        $tags[] = $row;
+    }
+    echo json_encode(["name" => $respons['name'], "description" => $respons['description'], "tags" => json_encode($tags)]);*/
+    echo json_encode($entries);
+}
+
+if (isset($_GET['getDisorder'])){
+    $id = intval($_GET['getDisorder']);
+    getDisorder("SELECT * FROM disorders WHERE id = '$id'");
+}
+
+if (isset($_GET['tag'])) {
+    $tag = $mysqli->real_escape_string($_GET['tag']);
+    getAllDisorder("SELECT d.name, d.id
+      FROM disorders d
+      JOIN disorder_tags t ON d.id = t.disorderId
+      WHERE t.tag = '$tag'");
+}
+
+if (isset($_GET['search'])) {
+    $search = $mysqli->real_escape_string($_GET['search']);
+    getAllDisorder("SELECT * FROM disorders WHERE name LIKE '%$search%'");
+}
+
+if (isset($_GET['deleteDisorder'])) {
+    $userData = getUDat();
+    if ($userData != false) { 
+        if ($userData['permission'] > 1) {
+            $disid = intval($_GET['deleteDisorder']);
+            $mysqli->query("DELETE FROM disorder_tags WHERE disorderId = '$disid'");
+            $mysqli->query("DELETE FROM disorders WHERE id = '$disid'");
+            sendReposne('success', 'Done');  
+        } else {
+            sendReposne('error', 'no perms');
+        }
+    } else {
+        sendReposne('error', 'notloggedin');     
+    }
 }
 
 if (isset($_POST['editDisorder'])){
@@ -128,7 +158,11 @@ if (isset($_POST['editDisorder'])){
                 }
             }
             sendReposne('success', 'edi');  
+        } else {
+            sendReposne('error', 'no perms');
         }
+    } else {
+        sendReposne('error', 'notloggedin');     
     }
 }
 
@@ -188,5 +222,9 @@ if (isset($_GET['logged_in'])) {
     } else {
         sendReposne('fail', 'Failed to login');
     }
+}
+
+if (isset($_GET['logout'])){
+    session_destroy();
 }
 ?>

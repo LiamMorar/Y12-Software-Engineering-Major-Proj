@@ -6,24 +6,47 @@ var tagContainer = document.getElementById('tagContainer');
 var results = document.getElementById('results');
 var disorderDescription = document.getElementById("disorderDescription");
 var disorderId = new URLSearchParams(window.location.search).get("id");
-var user = {};
+var disorderSearch = new URLSearchParams(window.location.search).get("search");
+var user = false;
 
-if (searchInput) {
-    searchInput.addEventListener('input', () => {
-        fetch(`server.php?search=${searchInput.value}`)
-            .then(res => res.json())
-            .then(data => {
-                results.innerHTML = data.map(dat =>
-                    '<div><a href="disorder.html?id=' + dat.id + '">' + dat.name + '</a></div>'
-                ).join('');
-            });
-    });
-    fetch(`server.php?search=`)
+async function loginTest() {
+    fetch('server.php?logged_in=1')
         .then(res => res.json())
         .then(data => {
-            results.innerHTML = data.map(dat =>
-                '<div><a href="disorder.html?id=' + dat.id + '">' + dat.name + '</a></div>'
-            ).join('');
+            if (data.status === 'success') {
+                user = JSON.parse(data.message);
+                if (document.getElementById('loginsignup')) {
+                    document.getElementById('loginsignup').innerHTML = '<li><a href="account.html">Account</a></li>'
+                }
+                return true;
+            } else if (data.status === 'fail') {
+                if (document.getElementsByClassName('testLogin').length > 0) {
+                    if (!document.getElementById('genericModalBg')) {
+                        opengenericmodal('<b>Log in to get the full experience</b></br><a href="login.html">Login</a> <br>or <br><a href="register.html">Register</a></br>Its free and i dont sell your information');
+                    }
+                }
+                if (document.getElementsByClassName('forceLogin').length > 0) {
+                    window.location.href = 'login.html'
+                }
+                return false;
+            }
+        })
+        .catch(err => {
+            return false;
+        });
+}
+
+document.addEventListener('DOMContentLoaded', loginTest);
+
+function search(searchFor) {
+    fetch(`server.php?search=${searchFor}`)
+        .then(res => res.json())
+        .then(data => {
+            results.innerHTML = '';
+            data.forEach((dat) => {
+                var da = JSON.parse(dat);
+                addDisToSearch(da.id, da.name, da.tags)
+            })
         });
 }
 
@@ -31,6 +54,7 @@ if (tagContainer) {
     fetch(`server.php?tags=1`)
         .then(res => res.json())
         .then(tags => {
+            tags.unshift('all')
             tagContainer.innerHTML = tags.map(tag =>
                 `<span onclick="fitlerTag('${tag}')">${tag}</span>`
             ).join('');
@@ -38,29 +62,112 @@ if (tagContainer) {
 }
 
 function fitlerTag(tag) {
-    fetch(`server.php?tag=${tag}`)
-        .then(res => res.json())
-        .then(data => {
-            document.getElementById('results').innerHTML = data.map(dat =>
-                '<div><a href="disorder.html?id=' + dat.id + '">' + dat.name + '</a></div>'
-            ).join('');
-        });
+    var t = tag
+    if (t == 'all') {
+        search('')
+        window.location.href = 'search.html'
+    } else {
+        fetch(`server.php?tag=${t}`)
+            .then(res => res.json())
+            .then(data => {
+                results.innerHTML = '';
+                data.forEach((dat) => {
+                    var da = JSON.parse(dat)
+                    addDisToSearch(da.id, da.name, da.tags)
+                })
+            });
+    }
+}
+
+function addDisToSearch(id, name, tags) {
+    var entryEl = document.createElement('div')
+    entryEl.innerHTML = `<a href="disorder.html?id=${id}"><b>${name}</b></a><ul></ul>`;
+    entryEl.className = 'disorder-entry'
+    results.appendChild(entryEl)
+    var tagss = JSON.parse(tags);
+    tagss.forEach((tag) => {
+        //console.log(tag)
+        var tagli = document.createElement('li')
+        tagli.innerHTML = `<span class="tag" onclick="fitlerTag('${tag.tag}')">${tag.tag}</span>`
+        entryEl.getElementsByTagName('ul')[0].append(tagli)
+    })
+    function addoptions() {
+        if (user.permission > 1) {
+            var options = document.createElement('div')
+            var deletebutton = document.createElement('button')
+            options.append(deletebutton);
+            deletebutton.addEventListener('click', () => {
+                deleteDisorder(id, name);
+            })
+            entryEl.append(options)
+        }
+    }
+    if (user) {
+        addoptions();
+    }
+}
+
+//tbd remove gambleclassroom code
+function opengenericmodal(inner) {
+    var bg = document.createElement('div');
+    bg.style = `
+    position: fixed; top:0; left:0; width:100vw; height:100vh;
+    background: rgba(0,0,0,0.6); z-index:10000;
+  `;
+    bg.id = 'genericModalBg';
+    bg.addEventListener('click', () => document.body.removeChild(wraper));
+    var wraper = document.createElement('div');
+    wraper.id = 'genericModal';
+    wraper.style = `
+    position: fixed; top:0; left:0; width:100vw; height:100vh;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 10001;
+  `;
+    var box = document.createElement('div');
+    box.style = `
+    background: white; border-radius: 10px;
+    padding: 20px; max-width: 80vw; max-height: 80vh;
+    overflow-y: auto; text-align: center;
+    box-shadow: 0 0 15px rgba(0,0,0,0.3);
+    z-index: 10001;
+  `;
+    box.innerHTML = inner;
+
+    wraper.appendChild(bg);
+    wraper.appendChild(box);
+    document.body.appendChild(wraper);
+}
+//please remember to remove this before sending it to calder
+
+function deleteDisorder(id, name) {
+    if (user.permission > 1) {
+        var confirm = window.confirm('Are you 100 percent sure you want to delete ' + name + ', id of ' + id + ' ?');
+        if (confirm) {
+            fetch('server.php?deleteDisorder=' + id)
+                .then(() => {
+                    search('')
+                })
+        }
+    }
 }
 
 var tagsContainer = document.getElementById("disorderTags");
 
 document.addEventListener('DOMContentLoaded', () => {
-    if (document.getElementsByClassName('testLogin').length > 0) {
-        fetch('server.php?logged_in=1')
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    user = JSON.parse(data.message);
-                } else if (data.status === 'fail') {
-                    //tbd prompt login
-                }
+    loginTest();
+    setTimeout(() => {
+        if (searchInput) {
+            searchInput.addEventListener('input', () => {
+                search(searchInput.value);
             });
-    }
+            search('')
+        }
+
+        if (disorderSearch) {
+            //    console.log(disorderSearch)
+            fitlerTag(disorderSearch)
+        }
+    }, 100);
     if(disorderId) {
         fetch("server.php?getDisorder=" + disorderId)
             .then(response => response.json())
@@ -80,10 +187,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 var tags = JSON.parse(data.tags);
                 console.log(tags)
                 tags.forEach(tag => {
-                    var span = document.createElement("span");
+                    var span = document.createElement("a");
                     span.className = "tag";
                     span.innerHTML = tag.tag;
                     tagsContainer.appendChild(span);
+                    span.addEventListener('click', () => {
+                        span.href = 'search.html?search=' + String(tag.tag);
+                    })
                 });
             })
             .catch(err => {
@@ -186,7 +296,7 @@ if (tb) {
                 makeSel('u');
                 break;
             case 'ulist':
-                makeSel('ul');
+                makeSel('li');
                 break;
         }
         editable.focus();
@@ -507,4 +617,8 @@ function register(username, email, password) {
             }
             return data;
         })
+}
+
+function logout() {
+    fetch('server.php?logout=1');
 }
