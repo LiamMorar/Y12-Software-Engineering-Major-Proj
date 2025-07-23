@@ -166,6 +166,72 @@ if (isset($_POST['editDisorder'])){
     }
 }
 
+function testValid($iput) {
+    if (is_string($iput)){
+        if (empty($iput)) {
+            return false;
+        };
+        if (!preg_match('/^[\x00-\x7F]*$/', $iput)) {
+            return false;
+        }
+
+        $blacklist = ['"',"'",'`','\\','(',')','[',']','{','}','+','-','=','/','&','|','!',"\n","\r","\0"];
+        foreach ($blacklist as $char) {
+            if (strpos($iput, $char) !== false) {
+                return false;
+            }
+        }
+
+        return true;
+    } else {
+        return false;
+    }
+}
+
+function validateInput($input) {
+    //Reject Empty Input
+    if (empty($input)) {
+        return "Input cannot be empty";
+        //placeholder return to simulate rejecting input
+    };
+
+    //Reject lengths above 100 or below 3
+    if (strlen($input) > 100) {
+        return "Input exceeds maximum allowed length";
+        //Placeholder return to simulate rejecting input
+    } else if (strlen($input) < 3) {
+        return "Input doesnt surpass minimum length";
+        //Placeholder return to simulate rejecting input
+    };
+
+    //Reject non-ASCII characters
+    if (!preg_match('/^[\x00-\x7F]*$/', $input)) {
+        return "Input must contain only ASCII characters.";
+        //Placeholder return to simulate rejecting input
+    }
+
+    //Define harmful characters in array
+    $blacklist = ['"',"'",'`','\\','(',')','[',']','{','}','+','-','=','/','&','|','!',"\n","\r","\0"];
+    //Reject harmful characters
+    foreach ($blacklist as $char) {
+        //For every disallowed character check if in input
+        if (strpos($input, $char) !== false) {
+            return "Input contains disallowed characters.";
+            //Placeholder return to simulate rejecting input
+        }
+    }
+
+    //Specified whitelisted characters for alphanumeric and a few symbols
+    if (!preg_match('/^[a-zA-Z0-9_\-@.]+$/', $input)) {
+        return "Input contains invalid characters.";
+        //Placeholder return to simulate rejecting input
+    };
+
+    return "Input is valid.";
+   //Placeholder return to simulate not rejecting input
+}
+
+
 if (isset($_POST['register'])) {
     $email = trim($_POST['email']);
     $uname = trim($_POST['username']);
@@ -173,9 +239,11 @@ if (isset($_POST['register'])) {
 
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         sendReposne('fail', 'invalid email format');
+        exit;
     }
     if (strlen($pw) < 8) {
         sendReposne('fail', 'password must be at least 8 characters');
+        exit;
     }
 
     $stmt = $mysqli->prepare("INSERT INTO users (Username, Email, pasword) VALUES (?, ?, ?)");
@@ -201,10 +269,21 @@ if (isset($_POST['login'])) {
             $_SESSION['user_id'] = $userData['U_id'];
             sendReposne('success','Login successful');
         } else {
-            sendReposne('error', $userData['pasword']);
+            sendReposne('error', 'Invalid username or password');
         }
     } else{
-        sendReposne('error', 'Invalid username or password');
+        $stmt = $mysqli->query("SELECT * FROM users WHERE Email = '$uname'");
+        $userData = $stmt->fetch_assoc();
+        if ($userData) {
+            if (password_verify($pw, $userData['pasword'])) {
+                $_SESSION['user_id'] = $userData['U_id'];
+                sendReposne('success','Login successful');
+            } else {
+                sendReposne('error', 'Invalid username or password');
+            }
+        } else{
+            sendReposne('error', 'Invalid username or password');
+        }
     }
     $stmt->close();
     exit;

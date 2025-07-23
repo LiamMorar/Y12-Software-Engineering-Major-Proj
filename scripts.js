@@ -18,6 +18,9 @@ async function loginTest() {
                 if (document.getElementById('loginsignup')) {
                     document.getElementById('loginsignup').innerHTML = '<li><a href="account.html">Account</a></li>'
                 }
+                if (user.permission > 1 && !document.getElementById('adminheaderbut')) {
+                    document.getElementsByClassName('navlinks')[0].innerHTML += '<li><a id="adminheaderbut" href="admin.html">Admin</a></li>'
+                }
                 return true;
             } else if (data.status === 'fail') {
                 if (document.getElementsByClassName('testLogin').length > 0) {
@@ -195,6 +198,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         span.href = 'search.html?search=' + String(tag.tag);
                     })
                 });
+                if (user.permission > 1) {
+                    document.getElementsByTagName('main')[0].innerHTML += '<button id="editBtn">Edit</button>'
+                }
             })
             .catch(err => {
                 console.log(err);
