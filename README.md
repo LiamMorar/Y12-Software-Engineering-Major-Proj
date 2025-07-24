@@ -31,7 +31,7 @@ you don't, you need the DB
 - **Search**: by like keyword or tag.
 - **CRUD**: **C**reate, **R**ead, **U**pdate, **D**elete entries.
 - **Accounts**: register, login, roles (admin/editor/viewer), account settings, change password.
-- **Version History**: see version history>(maybe).
+- **Version History**: see version history (maybe).
 
 ### Non-functional Requirements
 - **Usability**: intuitive UI, responsive layout.
@@ -42,7 +42,7 @@ you don't, you need the DB
 ### Out of scope
 - **Real Psychiatrists**
 - **Usefull information**
-- **Full port of DSM**, probably just gonna be some sections
+- **Full port of DSM**, probably just gonna be some sections, also like copyright issues
 
 ## TBD stuff
 
@@ -75,6 +75,7 @@ you don't, you need the DB
     - [x] Improved editing
     - [x] Improved creating entries
     - [ ] Resize controls for stuff 
+    - [ ] Admin approval page
 - **Other Stuff**
     - [ ] Reactive layout
     - [ ] *"Real"* documentation
@@ -84,11 +85,12 @@ you don't, you need the DB
     - [ ] Version history for entries
     - [ ] Restore to point
     - [ ] Optimisation
+    - [ ] like forums or smthn
 
 ```mermaid
 pie title Percentage done
 "Done" : 11
-"TBD" : 18
+"TBD" : 13
 ```
 
 ### Testing and Debugging

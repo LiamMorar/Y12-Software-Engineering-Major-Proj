@@ -202,7 +202,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     })
                 });
                 if (user.permission > 1) {
-                    document.getElementsByTagName('main')[0].innerHTML += '<button id="editBtn">Edit</button>'
+                    var edBtn = document.createElement('button');
+                    edBtn.innerText = 'Edit';
+                    edBtnaddEventListener('click', () => edittoggle())
+                    document.getElementsByTagName('main')[0].append(edBtn)
                 }
             })
             .catch(err => {
@@ -489,72 +492,70 @@ if (tb) {
 
     var editMode = false;
 
-    if (document.getElementById('editBtn')) {
-        document.getElementById('editBtn').addEventListener('click', () => {
-            editMode = !editMode
+    function edittoggle() {
+        editMode = !editMode
 
-            tb.style.display = editMode ? 'flex' : 'none';
+        tb.style.display = editMode ? 'flex' : 'none';
 
-            editable.contentEditable = editMode;
-            titleEdit.contentEditable = editMode;
+        editable.contentEditable = editMode;
+        titleEdit.contentEditable = editMode;
 
-            if (editMode) {
+        if (editMode) {
 
-                editable.focus();
+            editable.focus();
 
-                editable.addEventListener('input', editdis)
-                titleEdit.addEventListener('input', editdis)
+            editable.addEventListener('input', editdis)
+            titleEdit.addEventListener('input', editdis)
 
-                renderPalette()
+            renderPalette()
 
-                tagsContainer.querySelectorAll('.tag').forEach(span => {
-                    span.setAttribute('contenteditable', false);
-                    span.style.cursor = 'pointer';
-                    span.addEventListener('click', remvTag);
-                });
-                var input = document.createElement('input');
-                input.id = 'newTagInput';
-                input.placeholder = 'New tag';
-                var btn = document.createElement('button');
-                btn.id = 'addTagBtn';
-                btn.innerText = 'Add';
-                btn.addEventListener('click', () => {
-                    var v = input.value.trim();
-                    if (!v) return;
-                    var tagspan = document.createElement('span');
-                    tagspan.className = 'tag';
-                    tagspan.innerText = v;
-                    tagspan.style.cursor = 'pointer';
-                    tagspan.addEventListener('click', remvTag);
-                    tagsContainer.insertBefore(tagspan, input);
-                    input.value = '';
-                    editdis()
-                });
-                tagsContainer.appendChild(input);
-                tagsContainer.appendChild(btn);
-            } else {
-                editable.removeEventListener('input', editdis);
-                titleEdit.removeEventListener('input', editdis)
-
-                tagsContainer.querySelectorAll('.tag').forEach(tagspan => {
-                    tagspan.removeEventListener('click', remvTag);
-                    tagspan.style.cursor = '';
-                });
-                var oldInput = document.getElementById('newTagInput');
-                var oldBtn = document.getElementById('addTagBtn');
-                if (oldInput) oldInput.remove();
-                if (oldBtn) oldBtn.remove();
-            }
-
-            palette.style.display = editMode && divDefs.length ? 'block' : 'none';
-            document.querySelectorAll('.palette-item').forEach(item => {
-                item.draggable = editMode;
+            tagsContainer.querySelectorAll('.tag').forEach(span => {
+                span.setAttribute('contenteditable', false);
+                span.style.cursor = 'pointer';
+                span.addEventListener('click', remvTag);
             });
-            document.querySelectorAll('.inserted-div').forEach(inserted => {
-                inserted.style.border = editMode ? 'border:1px solid black;' : 'none';
-            })
-            divToolbar.style.display = editMode ? 'block' : 'none';
+            var input = document.createElement('input');
+            input.id = 'newTagInput';
+            input.placeholder = 'New tag';
+            var btn = document.createElement('button');
+            btn.id = 'addTagBtn';
+            btn.innerText = 'Add';
+            btn.addEventListener('click', () => {
+                var v = input.value.trim();
+                if (!v) return;
+                var tagspan = document.createElement('span');
+                tagspan.className = 'tag';
+                tagspan.innerText = v;
+                tagspan.style.cursor = 'pointer';
+                tagspan.addEventListener('click', remvTag);
+                tagsContainer.insertBefore(tagspan, input);
+                input.value = '';
+                editdis()
+            });
+            tagsContainer.appendChild(input);
+            tagsContainer.appendChild(btn);
+        } else {
+            editable.removeEventListener('input', editdis);
+            titleEdit.removeEventListener('input', editdis)
+
+            tagsContainer.querySelectorAll('.tag').forEach(tagspan => {
+                tagspan.removeEventListener('click', remvTag);
+                tagspan.style.cursor = '';
+            });
+            var oldInput = document.getElementById('newTagInput');
+            var oldBtn = document.getElementById('addTagBtn');
+            if (oldInput) oldInput.remove();
+            if (oldBtn) oldBtn.remove();
+        }
+
+        palette.style.display = editMode && divDefs.length ? 'block' : 'none';
+        document.querySelectorAll('.palette-item').forEach(item => {
+            item.draggable = editMode;
+        });
+        document.querySelectorAll('.inserted-div').forEach(inserted => {
+            inserted.style.border = editMode ? 'border:1px solid black;' : 'none';
         })
+        divToolbar.style.display = editMode ? 'block' : 'none';
     }
 
     document.getElementById('tbUp').addEventListener('click', () => {
