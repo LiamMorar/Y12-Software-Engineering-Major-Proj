@@ -204,7 +204,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (user.permission > 1) {
                     var edBtn = document.createElement('button');
                     edBtn.innerText = 'Edit';
-                    edBtnaddEventListener('click', () => edittoggle())
+                    console.log('edit')
+                    edBtn.addEventListener('click', () => edittoggle())
                     document.getElementsByTagName('main')[0].append(edBtn)
                 }
             })
