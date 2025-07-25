@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Mental Health Simplified</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="header"></div>
+    <main>
+        <h2 id="forumtitleshow"></h2>
+        <div id="forumdate"></div>
+        <div id="forumdesc"></div>
+        <div id="comments"></div>
+        <br>
+        <form id="addComment" method="POST" action="server.php">
+            <textarea name="forumId" id="hiddneID" style="display:none;" required></textarea>
+            <input type="text" name="comment" placeholder="Name" required>
+            <button type="submit" name="addcomment">Add Comment</button>
+        </form>
+    </main>
+    <script src="scripts.js"></script>
+</body>
+</html>

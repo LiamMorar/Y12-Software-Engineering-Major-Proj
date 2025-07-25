@@ -1,5 +1,11 @@
+//i keep speling wrong
+const json = JSON;
+
+
 var divDefs = [];
 var divDefSep = 'icantusesymbolssoitsgonnabelongtext';
+
+var roleNames = ['Member', 'Contributer', 'Moderator', 'Admin'];
 
 var searchInput = document.getElementById('searchInput');
 var tagContainer = document.getElementById('tagContainer');
@@ -9,7 +15,7 @@ var disorderId = new URLSearchParams(window.location.search).get("id");
 var disorderSearch = new URLSearchParams(window.location.search).get("search");
 var user = false;
 
-async function loginTest() {
+function loginTest() {
     fetch('server.php?logged_in=1')
         .then(res => res.json())
         .then(data => {
@@ -482,10 +488,9 @@ if (tb) {
             .then(res => res.json())
             .then(data => {
                 if (data.status === 'success') {
-                    console.log('Registration successful');
-                    //window.location.href = 'index.html';
+                    console.log('edited succssfully');
                 } else {
-                    console.warn('Registration failed:', data.message);
+                    console.warn('editing entry failed:', data.message);
                 }
                 return data;
             })
@@ -648,3 +653,56 @@ function loadsettings() {
         doSettOnce = true;
     }
 }
+
+var forumId = new URLSearchParams(window.location.search).get("forumid");
+
+var forumresults = document.getElementById('forumsresults');
+var forumtitle = document.getElementById('forumtitleshow');
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (forumresults) {
+        fetch('server.php?GetForums=1')
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    console.log(data.message)
+                    var formumsresults = JSON.parse(data.message);
+                    formumsresults.forEach((forum) => {
+                        console.log(forum)
+                        forumresults.innerHTML += `<a style="border:1px solid black;" href="forumpage.html?forumid=${forum.fP_Id}"><br>${forum.FTitle} <br> ${forum.FDesc}</a>`
+                    })
+                }
+            })
+    }
+    if (forumtitle && forumId) {
+        fetch('server.php?getForumInfo=' + String(forumId))
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    var formuminfo = JSON.parse(data.message).forum;
+                    forumtitle.innerText = formuminfo.FTitle;
+                    document.getElementById('forumdesc').innerText = formuminfo.FDesc;
+                    document.getElementById('forumdate').innerText = formuminfo.DateMade; 
+                    document.getElementById('hiddneID').innerHTML = formuminfo.fP_Id;
+                    var commentinfo = JSON.parse(data.message).comments;
+                    console.log(commentinfo)
+                    commentinfo.forEach((comment) => {
+                        var commentDiv = document.createElement('div');
+                        commentDiv.innerText = comment.comment;
+                        commentDiv.className = 'comment';
+                        document.getElementById('comments').append(commentDiv);
+                        fetch('server.php?simpleudat=' + comment.posterid)
+                            .then(res => res.json())
+                            .then(dat => {
+                                var commentUInfo = document.createElement('div')
+                                if (dat.status == 'success') {
+                                    var posterinfo = json.parse(dat.message);
+                                    commentUInfo.innerHTML = '<div class="posterinfo"><b>' + posterinfo.name + '</b><span>' + posterinfo.role + '</span></div>'
+                                    commentDiv.prepend(commentUInfo)
+                                };
+                            })
+                    })
+                }
+            })
+    }
+})

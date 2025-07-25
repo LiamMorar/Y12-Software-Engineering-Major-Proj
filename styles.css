@@ -309,3 +309,18 @@ footer {
 .logout-button:hover {
     background-color: #b31010;
 }
+
+#comments {
+    margin-top:50px;
+}
+
+.comment {
+    border:1px solid black;
+    padding:10px;
+    white-space:break-spaces;
+}
+
+.posterinfo {
+    display:flex;
+    flex-direction:column;
+}

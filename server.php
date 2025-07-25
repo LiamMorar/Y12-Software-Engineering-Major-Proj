@@ -310,6 +310,53 @@ if (isset($_GET['logout'])){
 if (isset($_POST['usersettings'])){
     $userData = getUDat();
     $updatesetts = $_POST['settings'];
-    
 }
+
+if (isset($_GET['GetForums'])){
+    $stmt = $mysqli->query("SELECT * FROM forumposts"); 
+    $forums = $stmt->fetch_all(MYSQLI_ASSOC);  
+    sendReposne('success', json_encode($forums));
+}
+
+if (isset($_POST['postForumTitle'])){
+    $title = $_POST['postForumTitle'];
+    $desc = $_POST['postForumDesc'];
+    $mysqli->query("INSERT INTO forumposts (FTitle, FDesc) VALUES ('$title', '$desc')");
+    $forumid = $mysqli->insert_id;
+    header("Location: forumpage.html?forumid=$forumid");
+}
+
+if (isset($_GET['getForumInfo'])){
+    $fpid = $_GET['getForumInfo'];
+    $stmt = $mysqli->query("SELECT * FROM forumposts WHERE fP_Id = '$fpid'"); 
+    $forums = $stmt->fetch_assoc();
+    $stmt = $mysqli->query("SELECT * FROM comments WHERE forumid = '$fpid'"); 
+    $comments = $stmt->fetch_all(MYSQLI_ASSOC);  
+    sendReposne('success',json_encode(["forum" => $forums, "comments" => $comments]));
+}
+
+if (isset($_GET['simpleudat'])){
+    $uid = $_GET['simpleudat'];
+    $stmt = $mysqli->query("SELECT * FROM users WHERE U_id = '$uid'");
+    $userData = $stmt->fetch_assoc();
+    if ($userData){
+        sendReposne('success', json_encode(['name' => $userData['Username'], 'role' => $userData['permission']]));
+    } else {
+        sendReposne('error', 'Couldnt Get User Info');
+    }
+}
+
+if (isset($_POST['addcomment'])){
+    $comment = $_POST['comment'];
+    $forumid = $_POST['forumId'];
+    $userdat = getUDat();
+    if ($userdat){
+        $usid = $userdat["U_id"];
+        $mysqli->query("INSERT INTO comments (forumid, comment, posterid) VALUES ('$forumid', '$comment', '$usid')");
+        header("Location: forumpage.html?forumid=$forumid");
+    } else {
+        header("Location: login.html");
+    }
+}
+
 ?>
