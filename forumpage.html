@@ -10,13 +10,13 @@
         <h2 id="forumtitleshow"></h2>
         <div id="forumdate"></div>
         <div id="forumdesc"></div>
-        <div id="comments"></div>
         <br>
         <form id="addComment" method="POST" action="server.php">
             <textarea name="forumId" id="hiddneID" style="display:none;" required></textarea>
-            <input type="text" name="comment" placeholder="Name" required>
+            <input type="text" name="comment" placeholder="Comment" required>
             <button type="submit" name="addcomment">Add Comment</button>
         </form>
+        <div id="comments"></div>
     </main>
     <script src="scripts.js"></script>
 </body>

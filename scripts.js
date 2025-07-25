@@ -668,7 +668,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     var formumsresults = JSON.parse(data.message);
                     formumsresults.forEach((forum) => {
                         console.log(forum)
-                        forumresults.innerHTML += `<a style="border:1px solid black;" href="forumpage.html?forumid=${forum.fP_Id}"><br>${forum.FTitle} <br> ${forum.FDesc}</a>`
+                        forumresults.innerHTML += `<a class="forumPost" href="forumpage.html?forumid=${forum.fP_Id}"><b>${forum.FTitle}</b> <br> <span>${forum.FDesc}</span></a>`
                     })
                 }
             })
@@ -688,6 +688,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     commentinfo.forEach((comment) => {
                         var commentDiv = document.createElement('div');
                         commentDiv.innerText = comment.comment;
+                        var tstamp = document.createElement('span')
+                        tstamp.className = 'tStamp';
+                        tstamp.innerText = comment.postedon;
+                        commentDiv.prepend(document.createElement('br'))
+                        commentDiv.prepend(tstamp)
                         commentDiv.className = 'comment';
                         document.getElementById('comments').append(commentDiv);
                         fetch('server.php?simpleudat=' + comment.posterid)
@@ -696,7 +701,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 var commentUInfo = document.createElement('div')
                                 if (dat.status == 'success') {
                                     var posterinfo = json.parse(dat.message);
-                                    commentUInfo.innerHTML = '<div class="posterinfo"><b>' + posterinfo.name + '</b><span>' + posterinfo.role + '</span></div>'
+                                    commentUInfo.innerHTML = '<div class="posterinfo"><b>' + posterinfo.name + '</b><span>' + roleNames[posterinfo.role] + '</span></div>'
                                     commentDiv.prepend(commentUInfo)
                                 };
                             })

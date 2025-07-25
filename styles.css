@@ -14,7 +14,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 40px;
+    padding: 0px 40px;
     position: fixed;
     width: 100%;
     top: 0;
@@ -39,6 +39,9 @@ body {
         font-weight: 500;
         transition: color 0.2s ease;
         font-size:20px;
+        height:100px;
+        display:flex;
+        align-items:center;
     }
 
         .navlinks a:hover {
@@ -48,7 +51,7 @@ body {
 main {
     max-width: 800px;
     background: #ffffff;
-    margin: 20px auto 40px auto;
+    margin: 130px auto 40px auto;
     padding: 40px;
     border-radius: 6px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
@@ -315,14 +318,45 @@ footer {
 }
 
 .comment {
-    border:1px solid black;
+    border:1px solid rgb(0,0,0,0.1);
+    box-shadow:0px 3px grey;
+    border-radius:20px;
     padding:10px;
     white-space:break-spaces;
+    margin:5px;
+}
+
+.tStamp {
+    color:grey;
+}
+
+.forumPost {
+    width: 95%;
+    height: 100px;
+    overflow-y: clip;
+    color: black;
+    text-decoration: none;
+    display: flex;
+    flex-direction:column;
+    padding: 20px;
+    transition: color 0.2s;
+    border: 1px solid rgb(0,0,0,0.2);
+    margin:5px;
+    border-radius:10px;
+}
+
+    .forumPost:hover {
+        color: #007acc;
+    }
+
+#forumsresults {
+    display:flex;
+    flex-direction:column;
 }
 
 .posterinfo {
-    display:flex;
-    flex-direction:column;
+    display: flex;
+    flex-direction: column;
 }
 
 .ForDiv, .ETBADiv {
