@@ -81,7 +81,7 @@ function getDisorder($fQuery) {
 
 function getAllDisorder($fQuery) {
     global $mysqli;
-    $stmt = $mysqli->query($fQuery);
+    $stmt = $mysqli->query($fQuery . "AND approved = 1");
     $respons = $stmt->fetch_all(MYSQLI_ASSOC);
     $entries =[];
     foreach ($respons as $dis){
@@ -313,7 +313,7 @@ if (isset($_POST['usersettings'])){
 }
 
 if (isset($_GET['GetForums'])){
-    $stmt = $mysqli->query("SELECT * FROM forumposts"); 
+    $stmt = $mysqli->query("SELECT * FROM forumposts WHERE approved = 1"); 
     $forums = $stmt->fetch_all(MYSQLI_ASSOC);  
     sendReposne('success', json_encode($forums));
 }
@@ -356,6 +356,80 @@ if (isset($_POST['addcomment'])){
         header("Location: forumpage.html?forumid=$forumid");
     } else {
         header("Location: login.html");
+    }
+}
+
+if (isset($_GET['approveCreate'])) {
+    $userdat = getUDat();
+    if ($userdat){
+        if ($userdat['permission'] > 2){
+            $idtoapprove = $_GET['approveCreate'];
+            $mysqli->query("UPDATE disorders SET approved = 1 WHERE id = '$idtoapprove'");
+            sendReposne('success', 'Approved entry');
+        }
+    }
+}
+
+if (isset($_GET['dontApproveCreate'])) {
+    $userdat = getUDat();
+    if ($userdat){
+        if ($userdat['permission'] > 2){
+            $idtoapprove = $_GET['dontApproveCreate'];
+            $mysqli->query("DELETE FROM disorders WHERE id = '$idtoapprove'");
+            sendReposne('success', 'Denied entry');
+        }
+    }
+}
+
+if (isset($_GET['allUnapproved'])) {
+    $userdat = getUDat();
+    if ($userdat){
+        if ($userdat['permission'] > 2){
+            $stmt = $mysqli->query("SELECT * FROM disorders WHERE approved = 0 LIMIT 5");
+            $unapproved = $stmt->fetch_all(MYSQLI_ASSOC);
+            sendReposne('success', json_encode($unapproved));
+        } else {
+            sendReposne('error', "You don't have coorect permissions");
+        }
+    } else {
+        sendReposne('error', "Not signed in");
+    }
+}
+
+if (isset($_GET['approveForum'])) {
+    $userdat = getUDat();
+    if ($userdat){
+        if ($userdat['permission'] > 2){
+            $idtoapprove = $_GET['approveForum'];
+            $mysqli->query("UPDATE forumposts SET approved = 1 WHERE fP_Id = '$idtoapprove'");
+            sendReposne('success', 'Approved post');
+        }
+    }
+}
+
+if (isset($_GET['dontApproveForum'])) {
+    $userdat = getUDat();
+    if ($userdat){
+        if ($userdat['permission'] > 2){
+            $idtoapprove = $_GET['dontApproveForum'];
+            $mysqli->query("DELETE FROM forumposts WHERE fP_Id = '$idtoapprove'");
+            sendReposne('success', message: 'Denied post');
+        }
+    }
+}
+
+if (isset($_GET['allUnapprovedForum'])) {
+    $userdat = getUDat();
+    if ($userdat){
+        if ($userdat['permission'] > 2){
+            $stmt = $mysqli->query("SELECT * FROM forumposts WHERE approved = 0 LIMIT 10");
+            $unapproved = $stmt->fetch_all(MYSQLI_ASSOC);
+            sendReposne('success', json_encode($unapproved));
+        } else {
+            sendReposne('error', "You don't have coorect permissions");
+        }
+    } else {
+        sendReposne('error', "Not signed in");
     }
 }
 

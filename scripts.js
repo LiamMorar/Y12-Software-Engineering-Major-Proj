@@ -47,8 +47,7 @@ function loginTest() {
             return false;
         });
 }
-
-document.addEventListener('DOMContentLoaded', loginTest);
+loginTest();
 
 function search(searchFor) {
     fetch(`server.php?search=${searchFor}`)
@@ -706,3 +705,79 @@ document.addEventListener('DOMContentLoaded', () => {
             })
     }
 })
+
+var adminpg = document.getElementById('admin');
+
+function adminpgload() {
+    if (user) {
+        if (user.permission > 1) {
+            fetch('server.php?allUnapproved=1')
+                .then(res => res.json())
+                .then(dat => {
+                    if (dat.status == 'success') {
+                        adminpg.innerHTML = '';
+                        var TBA = json.parse(dat.message);
+                        TBA.forEach((entToBeApproved) => {
+                            var ETBADiv = document.createElement('div')
+                            ETBADiv.className = 'ETBADiv'
+                            var desc = entToBeApproved.description.includes(divDefSep) ? entToBeApproved.description.split(divDefSep)[1] : entToBeApproved.description;
+                            ETBADiv.innerHTML = `<div class="inner"><H3>${entToBeApproved.name}</H3><p>${desc}</p></div><div class="sider"><button onclick="aprovecreate(${entToBeApproved.id}, true)">approve</button><button onclick="aprovecreate(${entToBeApproved.id}, false)">denied</button></div>`
+                            adminpg.append(ETBADiv)
+                        })
+                    };
+                })
+            //fetch('server.php?allUnapprovedEdits=1')
+            fetch('server.php?allUnapprovedForum=1')
+                .then(res => res.json())
+                .then(dat => {
+                    if (dat.status == 'success') {
+                        adminpg.innerHTML = '';
+                        var TBA = json.parse(dat.message);
+                        TBA.forEach((FToBeApproved) => {
+                            var ForDiv = document.createElement('div')
+                            ForDiv.className = 'ForDiv'
+                            ForDiv.innerHTML = `<div class="inner"><H3>${FToBeApproved.FTitle}</H3><p>${FToBeApproved.FDesc}</p></div><div class="sider"><button onclick="aproveforum(${FToBeApproved.fP_Id}, true)">approve</button><button onclick="aproveforum(${FToBeApproved.fP_Id}, false)">denied</button></div>`
+                            adminpg.append(ForDiv)
+                        })
+                    };
+                })
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (adminpg) {
+        //console.log('adminpa')
+        setTimeout(adminpgload,500)
+    }
+})
+
+function aprovecreate(id,t) {
+    if (user) {
+        if (user.permission > 1) {
+            var apOrNo = t ? 'a' : 'dontA';
+            fetch('server.php?' + apOrNo +'pproveCreate=' + id)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status == 'success') {
+                        adminpgload()
+                    }
+                })
+        }
+    }
+}
+
+function aproveforum(id, t) {
+    if (user) {
+        if (user.permission > 1) {
+            var apOrNo = t ? 'a' : 'dontA';
+            fetch('server.php?' + apOrNo + 'pproveForum=' + id)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status == 'success') {
+                        adminpgload()
+                    }
+                })
+        }
+    }
+}

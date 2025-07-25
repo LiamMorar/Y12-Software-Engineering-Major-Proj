@@ -324,3 +324,22 @@ footer {
     display:flex;
     flex-direction:column;
 }
+
+.ForDiv, .ETBADiv {
+    display: flex;
+    flex-direction: row;
+    border: 1px solid black;
+    padding: 10px;
+    margin: 10px;
+}
+
+    .ForDiv .inner, .ETBADiv .inner {
+        display: flex;
+        flex-direction: column;
+        transform: scale(0.9);
+    }
+
+    .sider {
+        display: flex;
+        flex-direction: column;
+    }
