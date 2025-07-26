@@ -10,64 +10,45 @@
     <div class="forceLogin"></div>
 
     <main>
-        <form id="addForm" method="POST" action="server.php">
-            <input type="text" name="disorderName" placeholder="Name" required>
+        <div class="tabSwitchinBar"><button onclick="selectTab('addPost')">Post</button><button onclick="selectTab('addEntry')">Entry</button></div>
+        <div id="addPost" class="postTab">
+            <form id="addFormPost" method="POST" action="server.php">
+                <input type="text" name="postForumTitle" placeholder="Title" required>
+                <textarea type="text" name="postForumDesc" placeholder="Content goes here" required></textarea>
+                <button type="submit" name="forumPost">Add Post</button>
+            </form>
+        </div>
 
-            <div id="editorToolbar" class="toolbar">
-                <button type="button" data-cmd="bold"><b>B</b></button>
-                <button type="button" data-cmd="it"><i>I</i></button>
-                <button type="button" data-cmd="ul"><u>U</u></button>
-                <button type="button" data-cmd="ulist">. List</button>
-                <button type="button" id="imgBtn">Image</button>
-                <button type="button" id="vidBtn">Video</button>
-                <button type="button" id="addDivBtn">Create Div</button>
-            </div>
+        <div id="addEntry" class="postTab">
+            <form id="addFormEntry" method="POST" action="server.php">
+                <input type="text" name="disorderName" placeholder="Name" required>
 
-            <aside id="divPalette" class="div-palette" style="display:none;">
-                <h4>My Div Templates</h4>
-                <div id="pItems"></div>
-            </aside>
-
-            <div id="divModal" class="modal" style="display:none;">
-                <div class="modal-content">
-                    <h3>Create Div Template</h3>
-                    <label>
-                        Name:<br>
-                        <input type="text" id="divSelector" placeholder="My Div">
-                    </label>
-                    <label>CSS Style:</label>
-                    <textarea id="divStyles" placeholder="e.g. background: #eee; padding: 10px;"></textarea>
-                    <div class="modal-actions">
-                        <button type="button" id="saveDivDef">Save</button>
-                        <button type="button" id="cancelDivDef">Cancel</button>
-                    </div>
+                <div id="editorToolbar" class="toolbar">
+                    <button type="button" data-cmd="bold"><b>B</b></button>
+                    <button type="button" data-cmd="it"><i>I</i></button>
+                    <button type="button" data-cmd="ul"><u>U</u></button>
+                    <button type="button" data-cmd="ulist">. List</button>
+                    <button type="button" id="imgBtn">Image</button>
+                    <button type="button" id="vidBtn">Video</button>
                 </div>
-            </div>
 
-            <div id="disorderDescription" class="editable" contenteditable="true" style="min-height:200px; border:1px solid #ccc; padding:10px;"></div>
+                <div id="disorderDescription" class="editable" contenteditable="true" style="min-height:200px; border:1px solid #ccc; padding:10px;"></div>
 
-            <textarea name="description" id="realDescription" style="display:none;"></textarea>
+                <textarea name="description" id="realDescription" style="display:none;"></textarea>
 
-            <input type="text" name="tags" placeholder="tags (comma separated)">
-            <button type="submit" name="addDisorder">Add Disorder</button>
-        </form>
+                <input type="text" name="tags" placeholder="tags (comma separated)">
+                <button type="submit" name="addDisorder">Add Disorder</button>
+            </form>
+        </div>
     </main>
-
-    <div id="divToolbar" style="display:none; position:absolute; z-index:1000;">
-        <button id="tbUp">↑</button>
-        <button id="tbDown">↓</button>
-        <button id="tbDel">✕</button>
-    </div>
 
     <script src="scripts.js"></script>
     <script>
-        document.getElementById('addForm').addEventListener('submit', function () {
+        document.getElementById('addFormEntry').addEventListener('submit', function () {
             document.getElementById('realDescription').value = document.getElementById('disorderDescription').innerHTML;
         });
 
-        if (divDefs.length) {
-            document.getElementById('divPalette').style.display = 'block';
-        }
+        selectTab('addPost')
     </script>
 </body>
 </html>

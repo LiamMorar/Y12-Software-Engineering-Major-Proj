@@ -2,9 +2,6 @@
 const json = JSON;
 
 
-var divDefs = [];
-var divDefSep = 'icantusesymbolssoitsgonnabelongtext';
-
 var roleNames = ['Member', 'Contributer', 'Moderator', 'Admin'];
 
 var searchInput = document.getElementById('searchInput');
@@ -14,6 +11,12 @@ var disorderDescription = document.getElementById("disorderDescription");
 var disorderId = new URLSearchParams(window.location.search).get("id");
 var disorderSearch = new URLSearchParams(window.location.search).get("search");
 var user = false;
+
+
+//removed
+var divDefs = [];
+var divDefSep = 'icantusesymbolssoitsgonnabelongtext';
+//removed
 
 function loginTest() {
     fetch('server.php?logged_in=1')
@@ -243,12 +246,6 @@ let editingDivIndex = null;
 var editable = document.getElementById('disorderDescription');
 var titleEdit = document.getElementById('disorderTitle');
 var tb = document.getElementById('editorToolbar');
-var divModal = document.getElementById('divModal');
-var divSelector = document.getElementById('divSelector');
-var divStyles = document.getElementById('divStyles');
-var palette = document.getElementById('divPalette');
-var pItems = document.getElementById('pItems');
-var divToolbar = document.getElementById('divToolbar');
 
 function getRange() {
     var sel = window.getSelection();
@@ -342,94 +339,10 @@ if (tb) {
     });
 
 
-    document.getElementById('addDivBtn').addEventListener('click', () => {
-        divSelector.value = '';
-        divStyles.value = '';
-        divModal.style.display = 'flex';
-    });
-
-    document.getElementById('cancelDivDef').addEventListener('click', () => {
-        divModal.style.display = 'none';
-    });
-
-    document.getElementById('saveDivDef').addEventListener('click', () => {
-        var sel = divSelector.value.trim();
-        var st = divStyles.value.trim();
-        if (!sel || !st) return alert('Both selector and styles are required.');
-
-        if (editingDivIndex === null) {
-            divDefs.push({ selector: sel, styles: st });
-        } else {
-            divDefs[editingDivIndex] = { selector: sel, styles: st };
-        }
-
-        editingDivIndex = null;
-        divModal.style.display = 'none';
-        renderPalette();
-    });
-
-    function renderPalette() {
-        pItems.innerHTML = '';
-        divDefs.forEach((d, i) => {
-            var item = document.createElement('div');
-            item.className = 'palette-item';
-            item.draggable = true;
-            item.dataset.index = i;
-
-            var label = document.createElement('span');
-            label.innerText = d.selector;
-            item.appendChild(label);
-
-            var btn = document.createElement('button');
-            btn.textContent = 'edit';
-            btn.style.marginLeft = '6px';
-            btn.addEventListener('click', e => {
-                e.stopPropagation();
-                divSelector.value = d.selector;
-                divStyles.value = d.styles;
-                editingDivIndex = i;
-                divModal.style.display = 'flex';
-            });
-            item.appendChild(btn);
-
-            item.addEventListener('dragstart', e => {
-                e.dataTransfer.setData('text/plain', i);
-            });
-
-            pItems.appendChild(item);
-        });
-
-        palette.style.display = divDefs.length ? 'block' : 'none';
-    }
-
-    cancelDivDef.addEventListener('click', () => {
-        editingDivIndex = null;
-        divModal.style.display = 'none';
-    });
-
 
     editable.addEventListener('dragover', e => e.preventDefault());
     editable.addEventListener('drop', e => {
         e.preventDefault();
-        var idx = e.dataTransfer.getData('text/plain');
-        if (idx !== '') {
-            var def = divDefs[idx];
-            var newDiv = document.createElement('div');
-            newDiv.className = 'inserted-div';
-            if (def.selector.startsWith('.'))
-                newDiv.classList.add(def.selector.slice(1));
-            else if (def.selector.startsWith('#'))
-                newDiv.id = def.selector.slice(1);
-            newDiv.setAttribute('style', def.styles);
-            newDiv.innerHTML = '<p>Editable content…</p>';
-            var range = document.caretRangeFromPoint(e.clientX, e.clientY);
-            if (range) {
-                range.insertNode(newDiv);
-            } else {
-                editable.appendChild(newDiv);
-            }
-            return;
-        }
         var file = e.dataTransfer.files[0];
         if (file && /^image\//.test(file.type)) {
             var reader = new FileReader();
@@ -441,32 +354,13 @@ if (tb) {
     });
 
 
-    editable.addEventListener('mouseover', e => {
-        if (!editMode) return;
-        var div = e.target.closest('.inserted-div');
-        if (div && editable.contains(div)) {
-            activeDiv = div;
-            var r = div.getBoundingClientRect();
-            divToolbar.style.top = (window.scrollY + r.top - divToolbar.offsetHeight - 4) + 'px';
-            divToolbar.style.left = (window.scrollX + r.left + r.width - divToolbar.offsetWidth) + 'px';
-            divToolbar.style.display = 'block';
-        }
-    });
-
-    editable.addEventListener('mouseout', e => {
-        if (!editMode) return;
-        if (e.relatedTarget && divToolbar.contains(e.relatedTarget)) return;
-        divToolbar.style.display = 'none';
-    });
-
-
     function remvTag(e) {
         e.currentTarget.remove();
         editdis()
     }
 
     function editdis() {
-        var storedDesc = JSON.stringify(divDefs) + divDefSep + disorderDescription.innerHTML;
+        var storedDesc = disorderDescription.innerHTML;
 
         var params = new URLSearchParams();
         params.append('editDisorder', '1');
@@ -500,10 +394,10 @@ if (tb) {
     function edittoggle() {
         editMode = !editMode
 
-        tb.style.display = editMode ? 'flex' : 'none';
-
         editable.contentEditable = editMode;
         titleEdit.contentEditable = editMode;
+
+        tb.style.display = editMode ? 'flex' : 'none';
 
         if (editMode) {
 
@@ -511,8 +405,6 @@ if (tb) {
 
             editable.addEventListener('input', editdis)
             titleEdit.addEventListener('input', editdis)
-
-            renderPalette()
 
             tagsContainer.querySelectorAll('.tag').forEach(span => {
                 span.setAttribute('contenteditable', false);
@@ -552,37 +444,7 @@ if (tb) {
             if (oldInput) oldInput.remove();
             if (oldBtn) oldBtn.remove();
         }
-
-        palette.style.display = editMode && divDefs.length ? 'block' : 'none';
-        document.querySelectorAll('.palette-item').forEach(item => {
-            item.draggable = editMode;
-        });
-        document.querySelectorAll('.inserted-div').forEach(inserted => {
-            inserted.style.border = editMode ? 'border:1px solid black;' : 'none';
-        })
-        divToolbar.style.display = editMode ? 'block' : 'none';
     }
-
-    document.getElementById('tbUp').addEventListener('click', () => {
-        if (!activeDiv) return;
-        var prev = activeDiv.previousElementSibling;
-        if (prev) activeDiv.parentNode.insertBefore(activeDiv, prev);
-        editdis();
-    });
-
-    document.getElementById('tbDown').addEventListener('click', () => {
-        if (!activeDiv) return;
-        var next = activeDiv.nextElementSibling;
-        if (next) activeDiv.parentNode.insertBefore(next, activeDiv);
-        editdis();
-    });
-
-    document.getElementById('tbDel').addEventListener('click', () => {
-        if (!activeDiv) return;
-        activeDiv.remove();
-        divToolbar.style.display = 'none';
-        editdis();
-    });
 }
 
 //login signup functions
@@ -786,3 +648,14 @@ function aproveforum(id, t) {
         }
     }
 }
+
+function selectTab(selector) {
+    var pTabs = document.querySelectorAll('.postTab');
+    pTabs.forEach((t) => {
+        t.style.display = 'none';
+    })
+
+    document.getElementById(selector).style.display = 'flex';
+}
+
+document.getElementById('')
