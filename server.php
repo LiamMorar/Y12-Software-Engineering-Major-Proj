@@ -138,7 +138,7 @@ if (isset($_GET['deleteDisorder'])) {
     }
 }
 
-if (isset($_POST['editDisorder'])){
+/*if (isset($_POST['editDisorder'])){
     $userData = getUDat();
     if ($userData != false) { 
         if ($userData['permission'] > 1) {
@@ -164,7 +164,7 @@ if (isset($_POST['editDisorder'])){
     } else {
         sendReposne('error', 'notloggedin');     
     }
-}
+}*/
 
 function testValid($iput) {
     if (is_string($iput)){
@@ -431,6 +431,73 @@ if (isset($_GET['allUnapprovedForum'])) {
     } else {
         sendReposne('error', "Not signed in");
     }
+}
+
+if (isset($_GET['allUnapprovedEdits'])) {
+    $result = $mysqli->query("SELECT * FROM edits WHERE approved = 0");
+    $edits = [];
+    while ($row = $result->fetch_assoc()) {
+        $edits[] = $row;
+    }
+    echo json_encode(["status" => "success", "message" => json_encode($edits)]);
+    exit;
+}
+
+if (isset($_GET['approveEdit'])) {
+    $editId = intval($_GET['approveEdit']);
+    $edit = $mysqli->query("SELECT * FROM edits WHERE ed_Id = $editId")->fetch_assoc();
+    if ($edit) {
+        $disid = $edit['disorderid'];
+
+        $stmt = $mysqli->prepare("UPDATE disorders SET name = ?, description = ? WHERE id = ?");
+        $stmt->bind_param("ssi", $edit['name'], $edit['desription'], $disid);
+        $stmt->execute();
+
+        $mysqli->query("UPDATE edits SET approved = 1 WHERE ed_Id = $editId");
+
+        $mysqli->query("DELETE FROM disorder_tags WHERE disorderId = '$disid'");
+
+            if (!empty($edit['tags'])) {
+                $tags = explode(',', $edit['tags']);
+                foreach ($tags as $tag) {
+                    $t = trim($mysqli->real_escape_string($tag));
+                    if ($t !== '') {
+                        $mysqli->query("INSERT INTO disorder_tags (disorderId, tag) VALUES ('$disid', '$t')");
+                    }
+                }
+            }
+
+        echo json_encode(["status" => "success"]);
+    } else {
+        echo json_encode(["status" => "fail", "message" => "Edit not found."]);
+    }
+    exit;
+}
+
+if (isset($_GET['dontApproveEdit'])) {
+    $editId = intval($_GET['dontApproveEdit']);
+    $mysqli->query("DELETE FROM edits WHERE ed_Id = $editId");
+    echo json_encode(["status" => "success"]);
+    exit;
+}
+
+
+if (isset($_POST['propoEdit'])) {
+    $disorderId = intval($_POST['disorderId']);
+    $title = $_POST['title'];
+    $desc = $_POST['desc'];
+    $tags = $_POST['tags'];
+    $userId = $_SESSION['user_id'];
+
+    $stmt = $mysqli->prepare("INSERT INTO edits (disorderid, userid, name, desription, tags) VALUES (?, ?, ?, ?, ?)");
+    $stmt->bind_param("iisss", $disorderId, $userId, $title, $desc, $tags);
+
+    if ($stmt->execute()) {
+        echo json_encode(["status" => "success", "message" => "Edit proposed"]);
+    } else {
+        echo json_encode(["status" => "fail", "message" => "Couldnt propose"]);
+    }
+    exit;
 }
 
 ?>

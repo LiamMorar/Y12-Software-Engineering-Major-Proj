@@ -206,10 +206,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     span.innerHTML = tag.tag;
                     tagsContainer.appendChild(span);
                     span.addEventListener('click', () => {
-                        span.href = 'search.html?search=' + String(tag.tag);
+                        if (!editMode) {
+                            window.location.href = 'search.html?search=' + String(tag.tag);
+                        } else {
+                            console.log(String(tag.tag))
+                        }
                     })
                 });
-                if (user.permission > 1) {
+                if (user) {
                     var edBtn = document.createElement('button');
                     edBtn.innerText = 'Edit';
                     console.log('edit')
@@ -356,14 +360,15 @@ if (tb) {
 
     function remvTag(e) {
         e.currentTarget.remove();
-        editdis()
+        //editdis()
     }
 
     function editdis() {
         var storedDesc = disorderDescription.innerHTML;
 
         var params = new URLSearchParams();
-        params.append('editDisorder', '1');
+        //params.append('editDisorder', '1');
+        params.append('propoEdit', '1');
         params.append('disorderId', disorderId);
         params.append('title', document.getElementById('disorderTitle').innerHTML);
         params.append('desc', storedDesc);
@@ -403,8 +408,8 @@ if (tb) {
 
             editable.focus();
 
-            editable.addEventListener('input', editdis)
-            titleEdit.addEventListener('input', editdis)
+            //editable.addEventListener('input', editdis)
+            //titleEdit.addEventListener('input', editdis)
 
             tagsContainer.querySelectorAll('.tag').forEach(span => {
                 span.setAttribute('contenteditable', false);
@@ -427,13 +432,13 @@ if (tb) {
                 tagspan.addEventListener('click', remvTag);
                 tagsContainer.insertBefore(tagspan, input);
                 input.value = '';
-                editdis()
+                //editdis()
             });
             tagsContainer.appendChild(input);
             tagsContainer.appendChild(btn);
         } else {
-            editable.removeEventListener('input', editdis);
-            titleEdit.removeEventListener('input', editdis)
+            //editable.removeEventListener('input', editdis);
+            //titleEdit.removeEventListener('input', editdis)
 
             tagsContainer.querySelectorAll('.tag').forEach(tagspan => {
                 tagspan.removeEventListener('click', remvTag);
@@ -443,6 +448,8 @@ if (tb) {
             var oldBtn = document.getElementById('addTagBtn');
             if (oldInput) oldInput.remove();
             if (oldBtn) oldBtn.remove();
+
+            editdis();
         }
     }
 }
@@ -578,11 +585,11 @@ var adminpg = document.getElementById('admin');
 function adminpgload() {
     if (user) {
         if (user.permission > 1) {
+            adminpg.innerHTML = '';
             fetch('server.php?allUnapproved=1')
                 .then(res => res.json())
                 .then(dat => {
                     if (dat.status == 'success') {
-                        adminpg.innerHTML = '';
                         var TBA = json.parse(dat.message);
                         TBA.forEach((entToBeApproved) => {
                             var ETBADiv = document.createElement('div')
@@ -593,12 +600,36 @@ function adminpgload() {
                         })
                     };
                 })
-            //fetch('server.php?allUnapprovedEdits=1')
+            fetch('server.php?allUnapprovedEdits=1')
+                .then(res => res.json())
+                .then(dat => {
+                    if (dat.status == 'success') {
+                        var edits = JSON.parse(dat.message);
+                        edits.forEach((edit) => {
+                            var edDiv = document.createElement('div');
+                            edDiv.className = 'editApproval';
+
+                            console.log(edit)
+
+                            edDiv.innerHTML = `
+                    <div class="inner">
+                        <h3>Proposed Edit: ${edit.name}</h3>
+                        <p>${edit.desription}</p>
+                        <p>Tags: ${edit.tags}</p>
+                        <p>Disorder ID: ${edit.disorderid}</p>
+                    </div>
+                    <div class="sider">
+                        <button onclick="approveEdit(${edit.ed_Id}, true)">Approve</button>
+                        <button onclick="approveEdit(${edit.ed_Id}, false)">Deny</button>
+                    </div>`;
+                            adminpg.appendChild(edDiv);
+                        });
+                    }
+                });
             fetch('server.php?allUnapprovedForum=1')
                 .then(res => res.json())
                 .then(dat => {
                     if (dat.status == 'success') {
-                        adminpg.innerHTML = '';
                         var TBA = json.parse(dat.message);
                         TBA.forEach((FToBeApproved) => {
                             var ForDiv = document.createElement('div')
@@ -658,4 +689,18 @@ function selectTab(selector) {
     document.getElementById(selector).style.display = 'flex';
 }
 
-document.getElementById('')
+
+function approveEdit(id, t) {
+    if (user) {
+        if (user.permission > 1) {
+            var apOrNo = t ? 'a' : 'dontA';
+            fetch('server.php?' + apOrNo + 'pproveEdit=' + id)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status == 'success') {
+                        adminpgload()
+                    }
+                })
+        }
+    }
+}
