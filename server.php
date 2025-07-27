@@ -500,4 +500,15 @@ if (isset($_POST['propoEdit'])) {
     exit;
 }
 
+
+if (isset($_GET['deleteforumpost'])){
+    $userdat = getUDat();
+    if ($userdat > 1){
+            $fpid = $_GET['deleteforumpost'];
+            $mysqli->query("DELETE FROM forumposts WHERE fP_Id = '$fpid'");
+            sendReposne('success', "done.");
+    } else {
+        sendReposne('error', "You don't have correct permissions.");
+    }
+}
 ?>

@@ -527,20 +527,27 @@ var forumId = new URLSearchParams(window.location.search).get("forumid");
 var forumresults = document.getElementById('forumsresults');
 var forumtitle = document.getElementById('forumtitleshow');
 
+function loadforumposts() {
+    fetch('server.php?GetForums=1')
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                forumresults.innerHTML = '';
+                var formumsresults = JSON.parse(data.message);
+                console.log(formumsresults)
+                formumsresults.forEach((forum) => {
+                    forumresults.innerHTML += `<a class="forumPost" href="forumpage.html?forumid=${forum.fP_Id}"><b>${forum.FTitle}</b> <br> <span>${forum.FDesc}</span></a>`
+                    if (user.permission > 2) {
+                        forumresults.innerHTML += '<button onclick="deleteforum(' + forum.fP_Id + ')"></button>';
+                    };
+                });
+            }
+        })
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     if (forumresults) {
-        fetch('server.php?GetForums=1')
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    console.log(data.message)
-                    var formumsresults = JSON.parse(data.message);
-                    formumsresults.forEach((forum) => {
-                        console.log(forum)
-                        forumresults.innerHTML += `<a class="forumPost" href="forumpage.html?forumid=${forum.fP_Id}"><b>${forum.FTitle}</b> <br> <span>${forum.FDesc}</span></a>`
-                    })
-                }
-            })
+        loadforumposts();
     }
     if (forumtitle && forumId) {
         fetch('server.php?getForumInfo=' + String(forumId))
@@ -579,6 +586,19 @@ document.addEventListener('DOMContentLoaded', () => {
             })
     }
 })
+
+function deleteforum(id) {
+    fetch('server.php?deleteforumpost=' + id)
+        .then(res => res.json())
+        .then(data => {
+            if (data.status == 'success') {
+                opengenericmodal('Forum page deleted.');
+                loadforumposts();
+            } else {
+                opengenericmodal(data.message);
+            }
+        })
+}
 
 var adminpg = document.getElementById('admin');
 
