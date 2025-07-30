@@ -6,10 +6,139 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <canvas width="3000px" height="3000px" class="bgcanvas"></canvas>
     <div id="header"></div>
-    <div>
-        <p>TBD</p>
+    <div class="mainpagestuff">
+        <div class="parralax">
+            <canvas height="800px" width="1000px" class="flocanv"></canvas>
+            <div id="parralaxtext">You're Not Alone</div>
+        </div>
+        <div class="restofpage">
+            <p>
+                At {tbd}, we leverage next gen mental health literacy frameworks to deliver a frictionless, intuitive, user-centric experience.
+                <br><br>
+                Through a deep and well rooted community, we ensure always on accessibility to essential psychoeducational assets.
+                <br><br>
+                Join us as we synergize neurodiversity, design thinking, and stakehold wellbeing into a single platform.
+            </p>
+            <div class="row" style=" align-items: center; justify-content: center;">
+                <div class="card">
+                    <div class="cardInnerIg">
+                        <h2>Join Us</h2>
+                        <p>
+                            Explore our resources, participate in our community forums and be a part of the movement transforming mental health awareness.
+                        </p>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="cardInnerIg">
+                        <h2>Our Vision</h2>
+                        <p>
+                            Envisioning a future where mental health conversations are normalised stigma is dismantled, and everyone has the tools to lead a balanced life.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="cardInnerIg">
+                        <h2>Our Mission</h2>
+                        <p>
+                            To democratize mental health knowledge by providing accessible and engaging content that supports individuals on their journey to mental wellness.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--testbutterfly<div class="butterfly" hidden></div>-->
     </div>
+    <script>
+        function spawnswarm() {
+            var bcount = Math.random() * 150 + 10;
+            var butterflies = [];
+            for (let i = 0; i < bcount; i++) {
+                var buttefly = document.createElement('div')
+                buttefly.className = 'butterfly';
+                var x = (Math.random() * 500) - 600 + 'px';
+                var y = (Math.random() * 500) - 600 + 'px';
+                buttefly.style.animationDelay = Math.random() + 's'
+                buttefly.style.left = x;
+                buttefly.style.bottom = y;
+                buttefly.style.transition = `bottom ${6 * Math.random() + 9}s, left ${6 * Math.random() + 9}s`;
+                document.getElementsByClassName('mainpagestuff')[0].append(buttefly);
+                butterflies.push({ bfly: buttefly, x, y })
+            }
+            setTimeout(() => {
+                butterflies.forEach((b) => {
+                    setTimeout(() => {
+                        b.bfly.style.left = '110vw';
+                        b.bfly.style.bottom = '110vh';
+                    }, Math.round(Math.random() * 4000))
+                })
+            }, 100)
+        }
+        spawnswarm();
+
+        var canvas = document.getElementsByClassName('flocanv')[0];
+        var ctx = canvas.getContext('2d');
+        var center = { x: canvas.width / 2, y: canvas.height / 2 };
+
+        var points = 30 * (Math.random() / 2) + 10;
+        var baseRad = Math.min(canvas.width, canvas.height) * 0.3;
+        var maxwiggly = baseRad * (Math.random() / 2) + 0.2;
+
+        let time = 0;
+
+        function getradOff(angle, t) {
+            return (
+                Math.sin(angle * 3 + t) * 0.5 +
+                Math.sin(angle * 7 + t * 1.5) * 0.3 +
+                Math.sin(angle * 13 + t * 0.7) * 0.2
+            ) * maxwiggly;
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            var ponts = [];
+
+            for (let i = 0; i <= points; i++) {
+                var facrtion = i / points;
+                var angle = facrtion * Math.PI * 2;
+
+                var r = baseRad + getradOff(angle, time);
+                var x = center.x + Math.cos(angle + time * 0.2) * r;
+                var y = center.y + Math.sin(angle + time * 0.2) * r;
+
+                ponts.push({ x, y });
+            }
+            ctx.beginPath();
+            for (let i = 0; i < ponts.length; i++) {
+                var p0 = ponts[i];
+                var p1 = ponts[(i + 1) % ponts.length];
+
+                if (i === 0) {
+                    ctx.moveTo(p0.x, p0.y);
+                }
+                var midX = (p0.x + p1.x) / 2;
+                var midY = (p0.y + p1.y) / 2;
+                ctx.quadraticCurveTo(p0.x, p0.y, midX, midY);
+            }
+
+            ctx.closePath();
+
+            ctx.lineWidth = 30;
+            ctx.strokeStyle = 'rgba(100, 149, 237, 0.2)'//'rgb(100, 149, 237)';
+            ctx.stroke();
+            ctx.fillStyle = 'rgba(100, 149, 237, 0.9)';
+            ctx.fill()
+
+            time += 0.015;
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+
     <script src="scripts.js"></script>
 </body>
 </html>

@@ -8,7 +8,7 @@
 <body>
     <div id="header"></div>
     <div class="forceLogin"></div>
-
+    <canvas width="3000px" height="3000px" class="bgcanvas"></canvas>
     <main>
         <div class="tabSwitchinBar"><button onclick="selectTab('addPost')">Post</button><button onclick="selectTab('addEntry')">Entry</button></div>
         <div id="addPost" class="postTab">
@@ -42,6 +42,7 @@
         </div>
     </main>
 
+    <div id="footer"></div>
     <script src="scripts.js"></script>
     <script>
         document.getElementById('addFormEntry').addEventListener('submit', function () {

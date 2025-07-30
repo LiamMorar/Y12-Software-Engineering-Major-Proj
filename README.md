@@ -75,7 +75,7 @@ you don't, you need the DB
     - [x] Improved editing
     - [x] Improved creating entries
     - [ ] Resize controls for stuff 
-    - [ ] Admin approval page
+    - [x] Admin approval page
 - **Other Stuff**
     - [ ] Reactive layout
     - [ ] *"Real"* documentation
@@ -85,7 +85,7 @@ you don't, you need the DB
     - [ ] Version history for entries
     - [ ] Restore to point
     - [ ] Optimisation
-    - [ ] like forums or smthn
+    - [x] like forums or smthn
 
 ```mermaid
 pie title Percentage done

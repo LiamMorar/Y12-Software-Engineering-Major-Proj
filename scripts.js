@@ -238,7 +238,7 @@ document.addEventListener("DOMContentLoaded", function () {
     fetch("reusable/footer.html")
         .then((response) => response.text())
         .then((data) => {
-            //document.getElementById("footer").innerHTML = data;
+            document.getElementById("footer").innerHTML = data;
         });
 });
 
@@ -723,4 +723,82 @@ function approveEdit(id, t) {
                 })
         }
     }
+}
+
+
+//coolbg effect
+//note: its called a plexus effect
+
+if (document.getElementsByClassName('bgcanvas').length > 0) {
+    var bgcanvas = document.getElementsByClassName('bgcanvas')[0];
+    var ctxbg = bgcanvas.getContext('2d');
+
+    var w = bgcanvas.width
+    var h = bgcanvas.height
+    var speed = 2;
+    var siz = {mix:1,max:2}
+
+    class Particle {
+        constructor() {
+            this.reset();
+        }
+        reset() {
+            this.x = Math.random() * w;
+            this.y = Math.random() * h;
+            this.vx = (Math.random() * speed) - (speed / 2);
+            this.vy = (Math.random() * speed) - (speed / 2);
+            this.size = Math.random() * (siz.max - siz.mix) + siz.mix;
+        }
+        update() {
+            this.x += this.vx;
+            this.y += this.vy;
+            if (this.x < 0 || this.x > w) this.vx *= -1;
+            if (this.y < 0 || this.y > h) this.vy *= -1;
+        }
+        draw() {
+            ctxbg.beginPath();
+            //ctxbg.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctxbg.fill();
+        }
+    }
+
+    var particles = [];
+    var pcount = 1000;
+    for (let i = 0; i < pcount; i++) {
+        particles.push(new Particle());
+    }
+
+    function draw() {
+        ctxbg.clearRect(0, 0, bgcanvas.width, bgcanvas.height)
+
+        ctxbg.strokeStyle = 'rgba(50, 100, 150, 0.2)';
+        for (let i = 0; i < particles.length; i++) {
+            var p1 = particles[i];
+            for (let j = i + 1; j < particles.length; j++) {
+                var p2 = particles[j];
+                dx = p1.x - p2.x;
+                dy = p1.y - p2.y;
+                dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < 200) {
+                    ctxbg.lineWidth = dist / 100;
+                    ctxbg.beginPath();
+                    ctxbg.moveTo(p1.x, p1.y);
+                    ctxbg.lineTo(p2.x, p2.y);
+                    ctxbg.stroke();
+                }
+            }
+        }
+
+        ctxbg.fillStyle = 'rgba(50, 100, 150, 0.5)';
+        particles.forEach(p => {
+            p.update();
+            p.draw();
+        });
+
+    }
+    function update() {
+        draw();
+        setTimeout(update, 1);
+    }
+    update()
 }
