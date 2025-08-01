@@ -12,6 +12,32 @@
     <br><br><br>
 
     <main>
+        <section class="account-info">
+            <h1>Your Account</h1>
+            <p><b>Username:</b> <span id="accUsername"></span></p>
+            <p><b>Email:</b> <span id="accEmail"></span></p>
+            <p><b>Role:</b> <span id="accRole"></span></p>
+        </section>
+
+        <section class="settings-section">
+            <h2>Settings</h2>
+            <div id="settingsContainer">
+            </div>
+            <button onclick="saveSettings()">Save Settings</button>
+        </section>
+
+        <section class="password-section">
+            <h2>Change Password</h2>
+            <button id="cahngepw">Change Password</button>
+            <div class="changepwmodalhidden" id="changepwmodal">
+                <input type="password" placeholder="Old Password" id="olPw" />
+                <input type="password" placeholder="New Password" id="newPw1" />
+                <input type="password" placeholder="Repeat New Password" id="newPw2" />
+                <button id="changePassword">Change Password</button>
+                <p id="passwordError" class="error-message"></p>
+            </div>
+        </section>
+
         <button class="logout-button" onclick="logout()">Logout</button>
     </main>
     <script src="scripts.js"></script>

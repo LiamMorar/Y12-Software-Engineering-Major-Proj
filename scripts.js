@@ -16,6 +16,8 @@ var user = false;
 //removed
 var divDefs = [];
 var divDefSep = 'icantusesymbolssoitsgonnabelongtext';
+let activeDiv = null;
+let editingDivIndex = null;
 //removed
 
 function loginTest() {
@@ -68,22 +70,27 @@ if (tagContainer) {
     fetch(`server.php?tags=1`)
         .then(res => res.json())
         .then(tags => {
-            tags.unshift('all')
+            //add "all" tag as the first tag
+            tags.unshift('all');
+            //for every tag make a span
             tagContainer.innerHTML = tags.map(tag =>
                 `<span onclick="fitlerTag('${tag}')">${tag}</span>`
             ).join('');
         });
 }
 
+//function to filter by tag
 function fitlerTag(tag) {
     var t = tag
     if (t == 'all') {
+        //if tag is all then set search to blank
         search('')
-        window.location.href = 'search.html'
+        //window.location.href = 'search.html';
     } else {
         fetch(`server.php?tag=${t}`)
             .then(res => res.json())
             .then(data => {
+                //clear results and for each retrieved entry run the addDisToSearch function
                 results.innerHTML = '';
                 data.forEach((dat) => {
                     var da = JSON.parse(dat)
@@ -94,17 +101,21 @@ function fitlerTag(tag) {
 }
 
 function addDisToSearch(id, name, tags) {
+    //create the element to append
     var entryEl = document.createElement('div')
     entryEl.innerHTML = `<a href="disorder.html?id=${id}"><b>${name}</b></a><ul></ul>`;
     entryEl.className = 'disorder-entry'
     results.appendChild(entryEl)
+    //get the tags in JSON
     var tagss = JSON.parse(tags);
     tagss.forEach((tag) => {
         //console.log(tag)
+        //for each tag
         var tagli = document.createElement('li')
         tagli.innerHTML = `<span class="tag" onclick="fitlerTag('${tag.tag}')">${tag.tag}</span>`
         entryEl.getElementsByTagName('ul')[0].append(tagli)
     })
+    //if sometimes doesnt work but if the users perms mod or above allow to delete
     function addoptions() {
         if (user.permission > 1) {
             var options = document.createElement('div')
@@ -121,8 +132,9 @@ function addDisToSearch(id, name, tags) {
     }
 }
 
-//tbd remove gambleclassroom code
+// Code from side project: Gamble Classroom
 function opengenericmodal(inner) {
+    //this code is from a chrome extension so it creates all the divs and doesnt use classes just styles
     var bg = document.createElement('div');
     bg.style = `
     position: fixed; top:0; left:0; width:100vw; height:100vh;
@@ -151,14 +163,17 @@ function opengenericmodal(inner) {
     wraper.appendChild(box);
     document.body.appendChild(wraper);
 }
-//please remember to remove this before sending it to calder
+
 
 function deleteDisorder(id, name) {
     if (user.permission > 1) {
+        //make sure theres a warning for deleting
         var confirm = window.confirm('Are you 100 percent sure you want to delete ' + name + ', id of ' + id + ' ?');
         if (confirm) {
+            //if user confirms
             fetch('server.php?deleteDisorder=' + id)
                 .then(() => {
+                    //set the search to all
                     search('')
                 })
         }
@@ -168,16 +183,20 @@ function deleteDisorder(id, name) {
 var tagsContainer = document.getElementById("disorderTags");
 
 document.addEventListener('DOMContentLoaded', () => {
+    //login test
     loginTest();
     setTimeout(() => {
         if (searchInput) {
+            //add the event listener for searchbar
             searchInput.addEventListener('input', () => {
                 search(searchInput.value);
             });
+            //set default search to all
             search('')
         }
 
         if (disorderSearch) {
+            //if the search tag in url
             //    console.log(disorderSearch)
             fitlerTag(disorderSearch)
         }
@@ -186,9 +205,9 @@ document.addEventListener('DOMContentLoaded', () => {
         fetch("server.php?getDisorder=" + disorderId)
             .then(response => response.json())
             .then(data => {
-                window.dat = data;
-                console.log(data)
+                //set the title to the retrieved title
                 document.getElementById("disorderTitle").innerHTML = data.name;
+                //remanants from the old advanced css stuff, but should set the description element to the description
                 if (data.description.includes(divDefSep)) {
                     var disDescriptor = data.description.split(divDefSep)
                     disorderDescription.innerHTML = disDescriptor[1];
@@ -199,7 +218,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 tagsContainer.innerHTML = '';
                 var tags = JSON.parse(data.tags);
-                console.log(tags)
                 tags.forEach(tag => {
                     var span = document.createElement("a");
                     span.className = "tag";
@@ -217,12 +235,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     var edBtn = document.createElement('button');
                     edBtn.innerText = 'Edit';
                     console.log('edit')
-                    edBtn.addEventListener('click', () => edittoggle())
+                    edBtn.addEventListener('click', (e) => edittoggle(e))
                     document.getElementsByTagName('main')[0].append(edBtn)
                 }
             })
             .catch(err => {
-                console.log(err);
+                //if no then set to blank
                 disorderDescription.innerHTML = "<p>No disorder ID provided.</p>";
             });
     }
@@ -230,30 +248,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
 //reusablehtmlcode
 document.addEventListener("DOMContentLoaded", function () {
-    fetch("reusable/header.html")
-        .then((response) => response.text())
-        .then((data) => {
-            document.getElementById("header").innerHTML = data;
-        });
-    fetch("reusable/footer.html")
-        .then((response) => response.text())
-        .then((data) => {
-            document.getElementById("footer").innerHTML = data;
-        });
+    if (document.getElementById("header")) {
+        //if header div found then add the real header
+        fetch("reusable/header.html")
+            .then((response) => response.text())
+            .then((data) => {
+                document.getElementById("header").innerHTML = data;
+            });
+    }
+    if (document.getElementById('footer')) {
+        //if header div found then add the real header
+        fetch("reusable/footer.html")
+            .then((response) => response.text())
+            .then((data) => {
+                document.getElementById("footer").innerHTML = data;
+            });
+    }
 });
 
 //edit stuff
-
-let activeDiv = null;
-let editingDivIndex = null;
 
 var editable = document.getElementById('disorderDescription');
 var titleEdit = document.getElementById('disorderTitle');
 var tb = document.getElementById('editorToolbar');
 
 function getRange() {
+    //get selection
     var sel = window.getSelection();
     if (sel.rangeCount > 0) {
+        //if range count is over 0 then get the first
         return sel.getRangeAt(0);
     }
     var range = document.createRange();
@@ -264,40 +287,20 @@ function getRange() {
     return range;
 }
 
+//add tags around selected text
 function makeSel(tagName) {
     var range = getRange();
     if (range.collapsed) return;
+    //create wrap element
     var wrappa = document.createElement(tagName);
     wrappa.appendChild(range.extractContents());
+    //insert the wrapping element around the range
     range.insertNode(wrappa);
     var sel = window.getSelection();
     sel.removeAllRanges();
     var newRang = document.createRange();
     newRang.selectNodeContents(wrappa);
     sel.addRange(newRang);
-}
-
-function insertHTML(htmlString) {
-    var range = getRange();
-    var frag = document.createRange().createContextualFragment(htmlString);
-    range.insertNode(frag);
-    range.collapse(false);
-    var sel = window.getSelection();
-    sel.removeAllRanges();
-    sel.addRange(range);
-}
-
-function insertImg(src) {
-    var img = document.createElement('img');
-    img.src = src;
-    img.alt = '';
-    var range = getRange();
-    range.insertNode(img);
-    range.setStartAfter(img);
-    range.setEndAfter(img);
-    var sel = window.getSelection();
-    sel.removeAllRanges();
-    sel.addRange(range);
 }
 
 if (tb) {
@@ -321,43 +324,7 @@ if (tb) {
         editable.focus();
     });
 
-    document.getElementById('imgBtn').addEventListener('click', () => {
-        var url = prompt('Image URL:');
-        if (url) insertImg(url);
-        editable.focus();
-    });
-
-    document.getElementById('vidBtn').addEventListener('click', () => {
-        var url = prompt('video URL:');
-        if (url) {
-            var html = `
-      <div contenteditable="false">
-        <iframe src="${url}"
-                width="560" height="315"
-                frameborder="0" allowfullscreen>
-        </iframe>
-      </div><br>`;
-            insertHTML(html);
-        }
-        editable.focus();
-    });
-
-
-
-    editable.addEventListener('dragover', e => e.preventDefault());
-    editable.addEventListener('drop', e => {
-        e.preventDefault();
-        var file = e.dataTransfer.files[0];
-        if (file && /^image\//.test(file.type)) {
-            var reader = new FileReader();
-            reader.onload = () => {
-                insertImg(reader.result);
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-
-
+    //remove the tag element
     function remvTag(e) {
         e.currentTarget.remove();
         //editdis()
@@ -366,6 +333,7 @@ if (tb) {
     function editdis() {
         var storedDesc = disorderDescription.innerHTML;
 
+        //create params for edit post
         var params = new URLSearchParams();
         //params.append('editDisorder', '1');
         params.append('propoEdit', '1');
@@ -373,39 +341,43 @@ if (tb) {
         params.append('title', document.getElementById('disorderTitle').innerHTML);
         params.append('desc', storedDesc);
 
+        //get all tag spans and create and array of tags + filter and trim, then append the array to the posts params
         var tagSpans = document.querySelectorAll('#disorderTags .tag');
         var tags = Array.from(tagSpans)
             .map(s => s.innerText.trim())
             .filter(t => t.length > 0);
         params.append('tags', tags.join(','));
 
+        //send edit POST with the earlier params
         return fetch('server.php', {
             method: 'POST',
             body: params
         })
             .then(res => res.json())
             .then(data => {
-                if (data.status === 'success') {
-                    console.log('edited succssfully');
-                } else {
-                    console.warn('editing entry failed:', data.message);
+                if (data.status != 'success') {
+                    //send error message if not successfully
+                    opengenericmodal('Failed to edit entry: <br>' + data.message);
                 }
-                return data;
             })
     }
 
     var editMode = false;
 
-    function edittoggle() {
+    function edittoggle(e) {
+        //toggle edit mode
         editMode = !editMode
 
+        //make the title and main editable stuff editable
         editable.contentEditable = editMode;
         titleEdit.contentEditable = editMode;
 
+        //set toolbar visibility based on editmode
         tb.style.display = editMode ? 'flex' : 'none';
 
         if (editMode) {
 
+            //focus on the editable
             editable.focus();
 
             //editable.addEventListener('input', editdis)
@@ -414,6 +386,8 @@ if (tb) {
             tagsContainer.querySelectorAll('.tag').forEach(span => {
                 span.setAttribute('contenteditable', false);
                 span.style.cursor = 'pointer';
+                //if you click on the tag in edit mode then remove the tag
+                //for a later update add a dedicated remove button the the element
                 span.addEventListener('click', remvTag);
             });
             var input = document.createElement('input');
@@ -424,18 +398,25 @@ if (tb) {
             btn.innerText = 'Add';
             btn.addEventListener('click', () => {
                 var v = input.value.trim();
+                //if the tag value isnt valid then dont add it
                 if (!v) return;
+                //create a tag element
                 var tagspan = document.createElement('span');
                 tagspan.className = 'tag';
                 tagspan.innerText = v;
                 tagspan.style.cursor = 'pointer';
                 tagspan.addEventListener('click', remvTag);
+                //put the tag above the input
                 tagsContainer.insertBefore(tagspan, input);
                 input.value = '';
                 //editdis()
             });
+            //add the tag creating stuff
             tagsContainer.appendChild(input);
             tagsContainer.appendChild(btn);
+
+            //set the buttons text to say save so people know you have to save your changes
+            e.target.innerText = 'save';
         } else {
             //editable.removeEventListener('input', editdis);
             //titleEdit.removeEventListener('input', editdis)
@@ -449,6 +430,10 @@ if (tb) {
             if (oldInput) oldInput.remove();
             if (oldBtn) oldBtn.remove();
 
+            //set the buttons text to say edit again
+            e.target.innerText = 'edit';
+
+            //save changes
             editdis();
         }
     }
@@ -456,6 +441,7 @@ if (tb) {
 
 //login signup functions
 function login(username, password) {
+    //create params for the post and add inputs from page to it
     var params = new URLSearchParams();
     params.append('login', '1');
     params.append('username', username);
@@ -468,19 +454,22 @@ function login(username, password) {
         .then(res => res.json())
         .then(data => {
             if (data.status === 'success') {
-                console.log(data);
+                //if successful then open homepage
                 window.location.href = 'index.html';
             } else {
+                //display error messages for logging in
                 document.getElementsByClassName('error-message')[0].innerHTML = data.message;
             }
         })
         .catch(err => {
             console.error('Login error:', err);
+            //I cant remember why or whats gonna catch
             throw err;
         });
 }
 
 function register(username, email, password) {
+    //create params for the post and add inputs from page to it
     var params = new URLSearchParams();
     params.append('register', '1');
     params.append('username', username);
@@ -494,17 +483,19 @@ function register(username, email, password) {
         .then(res => res.json())
         .then(data => {
             if (data.status === 'success') {
-                console.log('Registration successful');
+                //if successfully registered then open the homepage
                 window.location.href = 'index.html';
             } else {
+                //display the error message like if pw too short or etc
                 document.getElementsByClassName('error-message')[0].innerHTML = data.message;
             }
-            return data;
         })
 }
 
+//logout function that reloads the page
 function logout() {
-    fetch('server.php?logout=1');
+    fetch('server.php?logout=1')
+        .then(window.location.reload());
 }
 
 var doSettOnce = false;
@@ -513,13 +504,113 @@ function loadsettings() {
     if (user && !doSettOnce) {
         //console.log('loafsettings')
         settings = JSON.parse(user.settings);
-        Object.keys(settings).forEach((setting, sIndex) => {
-            console.log(setting)
-            console.log(settings[setting])
-            document.getElementsByTagName('main')[0].innerHTML += `<br><label for="settingNum${sIndex}">${setting}</label> <input id="settingNum${sIndex}" value="${settings[setting]}" />`
-        })
+        var cont = document.getElementById('settingsContainer');
+
+        Object.entries(settings).forEach(([key, val]) => {
+            //console.log(setting)
+            //console.log(settings[setting])
+            var label = document.createElement('label');
+            label.setAttribute('for', `setting${key}`);
+            label.textContent = key;
+
+            //input types
+            let input;
+            if (typeof val === 'boolean') {
+                input = document.createElement('input');
+                input.type = 'checkbox';
+                input.checked = val;
+            } else if (!isNaN(val)) {
+                input = document.createElement('input');
+                input.type = 'number';
+                input.value = val;
+            } else {
+                input = document.createElement('input');
+                input.type = 'text';
+                input.value = val;
+            }
+
+            input.id = `setting${key}`;
+            input.dataset.settingKey = key;
+            cont.appendChild(label);
+            cont.appendChild(input);
+            cont.appendChild(document.createElement('br'));
+        });
+
+        //show account info
+        if (document.getElementById('accUsername')) {
+            document.getElementById('accUsername').textContent = user.Username;
+            document.getElementById('accEmail').textContent = user.Email;
+            document.getElementById('accRole').textContent = roleNames[user.permission] || 'Unknown';
+        }
+        //do settings only once
         doSettOnce = true;
     }
+}
+
+function saveSettings() {
+    var newSettings = {};
+    var inputs = document.querySelectorAll('#settingsContainer input');
+
+    inputs.forEach(input => {
+        var key = input.dataset.settingKey;
+        if (input.type === 'checkbox') {
+            newSettings[key] = input.checked;
+        } else if (input.type === 'number') {
+            newSettings[key] = parseFloat(input.value);
+        } else {
+            newSettings[key] = input.value;
+        }
+    });
+
+    var params = new URLSearchParams();
+    params.append('updateSettings', '1');
+    params.append('settings', JSON.stringify(newSettings));
+
+    fetch('server.php', {
+        method: 'POST',
+        body: params
+    })
+}
+
+
+//used to be a modal btw
+if (document.getElementById('cahngepw')) {
+    document.getElementById('cahngepw').addEventListener('click', () => {
+        if (document.getElementById('changepwmodal').className == 'changepwmodalhidden') {
+            document.getElementById('changepwmodal').className = 'changepwmodal';
+        } else {
+            document.getElementById('changepwmodal').className = 'changepwmodalhidden';
+        }
+    });
+}
+
+//change password function
+if (document.getElementById('changePassword')) {
+    document.getElementById('changePassword').addEventListener('click', () => {
+        //create params for the post and add stuff to it
+        var params = new URLSearchParams();
+        params.append('changePw', '1');
+        params.append('olPw', document.getElementById('olPw').value);
+        params.append('newPw1', document.getElementById('newPw1').value);
+        params.append('newPw2', document.getElementById('newPw2').value);
+        //do a post with the earlier params
+        fetch('server.php', {
+            method: 'POST',
+            body: params
+        })
+            .then(res => res.json)
+            .then(data => {
+                if (data.status == 'success') {
+                    opengenericmodal('Password changed successfully <br> <a onclick="refreshpage()">refresh page</a>');
+                } else {
+                    document.getElementById('passwordError').innerText = data.message;
+                }
+            })
+    });
+}
+
+function refreshpage() {
+    window.location.reload();
 }
 
 var forumId = new URLSearchParams(window.location.search).get("forumid");
@@ -534,9 +625,10 @@ function loadforumposts() {
             if (data.status === 'success') {
                 forumresults.innerHTML = '';
                 var formumsresults = JSON.parse(data.message);
-                console.log(formumsresults)
                 formumsresults.forEach((forum) => {
+                    //add the forum post to the html as a link that can be clicked
                     forumresults.innerHTML += `<a class="forumPost" href="forumpage.html?forumid=${forum.fP_Id}"><b>${forum.FTitle}</b> <br> <span>${forum.FDesc}</span></a>`
+                    //if user is admin or above then allow them to delete forum posts
                     if (user.permission > 2) {
                         forumresults.innerHTML += '<button onclick="deleteforum(' + forum.fP_Id + ')"></button>';
                     };
@@ -550,17 +642,20 @@ document.addEventListener('DOMContentLoaded', () => {
         loadforumposts();
     }
     if (forumtitle && forumId) {
+        //get forum stuff comments and forum
         fetch('server.php?getForumInfo=' + String(forumId))
             .then(res => res.json())
             .then(data => {
                 if (data.status === 'success') {
+                    //get the forum part of the forum get
                     var formuminfo = JSON.parse(data.message).forum;
                     forumtitle.innerText = formuminfo.FTitle;
                     document.getElementById('forumdesc').innerText = formuminfo.FDesc;
                     document.getElementById('forumdate').innerText = formuminfo.DateMade; 
                     document.getElementById('hiddneID').innerHTML = formuminfo.fP_Id;
+                    //get the comments part of the forum get
                     var commentinfo = JSON.parse(data.message).comments;
-                    console.log(commentinfo)
+                    //create a comment element for every comment in the forum post thing
                     commentinfo.forEach((comment) => {
                         var commentDiv = document.createElement('div');
                         commentDiv.innerText = comment.comment;
@@ -571,6 +666,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         commentDiv.prepend(tstamp)
                         commentDiv.className = 'comment';
                         document.getElementById('comments').append(commentDiv);
+                        //get some user data from poster like specifically their name and role, no passwords
                         fetch('server.php?simpleudat=' + comment.posterid)
                             .then(res => res.json())
                             .then(dat => {
@@ -578,6 +674,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 if (dat.status == 'success') {
                                     var posterinfo = json.parse(dat.message);
                                     commentUInfo.innerHTML = '<div class="posterinfo"><b>' + posterinfo.name + '</b><span>' + roleNames[posterinfo.role] + '</span></div>'
+                                    //add the user info stuff at the top of the comment
                                     commentDiv.prepend(commentUInfo)
                                 };
                             })
@@ -587,14 +684,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 })
 
+//delete forum post
 function deleteforum(id) {
     fetch('server.php?deleteforumpost=' + id)
         .then(res => res.json())
         .then(data => {
             if (data.status == 'success') {
+                //if successful then say deleted and reload all the forumposts
                 opengenericmodal('Forum page deleted.');
                 loadforumposts();
             } else {
+                //if error then show the message like if someone tries to delete without the right perms then it tells them
                 opengenericmodal(data.message);
             }
         })
@@ -606,6 +706,7 @@ function adminpgload() {
     if (user) {
         if (user.permission > 1) {
             adminpg.innerHTML = '';
+            //load all the create entries that need to be approved
             fetch('server.php?allUnapproved=1')
                 .then(res => res.json())
                 .then(dat => {
@@ -620,6 +721,7 @@ function adminpgload() {
                         })
                     };
                 })
+            //load all the edits on entries that need to be approved
             fetch('server.php?allUnapprovedEdits=1')
                 .then(res => res.json())
                 .then(dat => {
@@ -629,7 +731,7 @@ function adminpgload() {
                             var edDiv = document.createElement('div');
                             edDiv.className = 'editApproval';
 
-                            console.log(edit)
+                            //console.log(edit)
 
                             edDiv.innerHTML = `
                     <div class="inner">
@@ -646,6 +748,7 @@ function adminpgload() {
                         });
                     }
                 });
+            //load all the create forum posts that need to be approved
             fetch('server.php?allUnapprovedForum=1')
                 .then(res => res.json())
                 .then(dat => {
@@ -666,10 +769,12 @@ function adminpgload() {
 document.addEventListener('DOMContentLoaded', () => {
     if (adminpg) {
         //console.log('adminpa')
+        //wait half a second to load thing to be approved after the DOM stuff loads, because otherwise the user doesnt load in time
         setTimeout(adminpgload,500)
     }
 })
 
+//approve like the creation of entries in admin page
 function aprovecreate(id,t) {
     if (user) {
         if (user.permission > 1) {
@@ -678,6 +783,7 @@ function aprovecreate(id,t) {
                 .then(res => res.json())
                 .then(data => {
                     if (data.status == 'success') {
+                        //if no errors refresh the list of stuff needing approval
                         adminpgload()
                     }
                 })
@@ -685,6 +791,7 @@ function aprovecreate(id,t) {
     }
 }
 
+//approve forum posts in admin page
 function aproveforum(id, t) {
     if (user) {
         if (user.permission > 1) {
@@ -693,6 +800,7 @@ function aproveforum(id, t) {
                 .then(res => res.json())
                 .then(data => {
                     if (data.status == 'success') {
+                        //if no errors refresh the list of stuff needing approval
                         adminpgload()
                     }
                 })
@@ -700,16 +808,19 @@ function aproveforum(id, t) {
     }
 }
 
+//in the create swtich between the two create modes
 function selectTab(selector) {
     var pTabs = document.querySelectorAll('.postTab');
+    //hide allof the tabs
     pTabs.forEach((t) => {
         t.style.display = 'none';
     })
-
+    //set the one thats being selected to be visble
     document.getElementById(selector).style.display = 'flex';
 }
 
 
+//approve edit in admin page
 function approveEdit(id, t) {
     if (user) {
         if (user.permission > 1) {
@@ -718,6 +829,7 @@ function approveEdit(id, t) {
                 .then(res => res.json())
                 .then(data => {
                     if (data.status == 'success') {
+                        //if no errors refresh the list of stuff needing approval
                         adminpgload()
                     }
                 })
@@ -738,11 +850,13 @@ if (document.getElementsByClassName('bgcanvas').length > 0) {
     var speed = 2;
     var siz = {mix:1,max:2}
 
+    //this is really just to prove i can do classes
     class Particle {
-        constructor() {
+        varructor() {
             this.reset();
         }
         reset() {
+            //set the default stuff
             this.x = Math.random() * w;
             this.y = Math.random() * h;
             this.vx = (Math.random() * speed) - (speed / 2);
@@ -750,12 +864,15 @@ if (document.getElementsByClassName('bgcanvas').length > 0) {
             this.size = Math.random() * (siz.max - siz.mix) + siz.mix;
         }
         update() {
+            //update position by velocity
             this.x += this.vx;
             this.y += this.vy;
+            //bounce off edges if its too close
             if (this.x < 0 || this.x > w) this.vx *= -1;
             if (this.y < 0 || this.y > h) this.vy *= -1;
         }
         draw() {
+            //drawing the individual points didnt look as good
             ctxbg.beginPath();
             //ctxbg.arc(this.x, this.y, this.size, 0, Math.PI * 2);
             ctxbg.fill();
@@ -773,12 +890,15 @@ if (document.getElementsByClassName('bgcanvas').length > 0) {
 
         ctxbg.strokeStyle = 'rgba(50, 100, 150, 0.2)';
         for (let i = 0; i < particles.length; i++) {
+            //for each particle
             var p1 = particles[i];
             for (let j = i + 1; j < particles.length; j++) {
                 var p2 = particles[j];
+                //get distance
                 dx = p1.x - p2.x;
                 dy = p1.y - p2.y;
                 dist = Math.sqrt(dx * dx + dy * dy);
+                //if distance is below 200 then draw a line between them
                 if (dist < 200) {
                     ctxbg.lineWidth = dist / 100;
                     ctxbg.beginPath();
@@ -801,4 +921,32 @@ if (document.getElementsByClassName('bgcanvas').length > 0) {
         setTimeout(update, 1);
     }
     update()
+}
+
+
+//cards rotate to mouse on hover
+var cards = document.getElementsByClassName('card')
+for (let i = 0; i < cards.length; i++) {
+    var card = cards[i];
+    cardeventl(card)
+}
+
+//add the event listener because it doesnt work inside the for loop
+function cardeventl(card) {
+    card.addEventListener('mouseover', (e) => {
+        var rect = card.getBoundingClientRect();
+        //calculate middle point of card
+        var midde = { x: (rect.x + (rect.width / 2)), y: (rect.y + (rect.height / 2)) };
+
+        //calculate a rotate angle thats clamped between -45 and 45 degrees
+        var rotYaw = -0.5 * Math.min(Math.max(midde.x - e.x, -45), 45);
+        var rotPitch = 0.5 * Math.min(Math.max(midde.y - e.y, -45), 45);
+
+        //apply transform to card
+        card.style.transform = `perspective(1000px) rotateY(${rotYaw}deg) rotateX(${rotPitch}deg)`;
+    })
+    //remove transform when stopped hovering
+    card.addEventListener('mouseout', () => {
+        card.style.transform = 'perspective(1000px)'
+    })
 }

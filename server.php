@@ -439,8 +439,7 @@ if (isset($_GET['allUnapprovedEdits'])) {
     while ($row = $result->fetch_assoc()) {
         $edits[] = $row;
     }
-    echo json_encode(["status" => "success", "message" => json_encode($edits)]);
-    exit;
+    sendReposne("success", json_encode($edits));
 }
 
 if (isset($_GET['approveEdit'])) {
@@ -467,9 +466,9 @@ if (isset($_GET['approveEdit'])) {
                 }
             }
 
-        echo json_encode(["status" => "success"]);
+        sendReposne('success', 'Edit approved.');
     } else {
-        echo json_encode(["status" => "fail", "message" => "Edit not found."]);
+        sendReposne('error', 'Edit not found.');
     }
     exit;
 }
@@ -477,8 +476,7 @@ if (isset($_GET['approveEdit'])) {
 if (isset($_GET['dontApproveEdit'])) {
     $editId = intval($_GET['dontApproveEdit']);
     $mysqli->query("DELETE FROM edits WHERE ed_Id = $editId");
-    echo json_encode(["status" => "success"]);
-    exit;
+    sendReposne("success", "Edit denied");
 }
 
 
@@ -491,19 +489,12 @@ if (isset($_POST['propoEdit'])) {
 
     $stmt = $mysqli->prepare("INSERT INTO edits (disorderid, userid, name, desription, tags) VALUES (?, ?, ?, ?, ?)");
     $stmt->bind_param("iisss", $disorderId, $userId, $title, $desc, $tags);
-
-    if ($stmt->execute()) {
-        echo json_encode(["status" => "success", "message" => "Edit proposed"]);
-    } else {
-        echo json_encode(["status" => "fail", "message" => "Couldnt propose"]);
-    }
-    exit;
 }
 
 
 if (isset($_GET['deleteforumpost'])){
     $userdat = getUDat();
-    if ($userdat > 1){
+    if ($userdat['permission'] > 1){
             $fpid = $_GET['deleteforumpost'];
             $mysqli->query("DELETE FROM forumposts WHERE fP_Id = '$fpid'");
             sendReposne('success', "done.");
@@ -511,4 +502,39 @@ if (isset($_GET['deleteforumpost'])){
         sendReposne('error', "You don't have correct permissions.");
     }
 }
+
+if (isset($_POST['changePw'])){
+    $userdat = getUDat();
+    if (password_verify($_POST['olPw'],$userdat['pasword'])){
+        if ($userdat){
+            $pw1 = $_POST['newPw1'];
+            $pw2 = $_POST['newPw2'];
+            if ($pw1 == $pw2){
+                $pw = password_hash($pw1, PASSWORD_DEFAULT);
+                $stmt = $mysqli->prepare("UPDATE users SET pasword = ? WHERE U_id = ?");
+                $stmt->bind_param("si", $pw, $userid);
+                $stmt->execute();
+                sendReposne('success', "password Changed");
+            } else {
+                sendReposne('error', "Passwords don't match.");
+            }
+        }
+    } else {
+	sendReposne('error', 'Wrong password.');
+}
+
+}
+
+if (isset($_POST['updateSettings']) && isset($_POST['settings'])) {
+    if (!isset($_SESSION['userid'])) {
+        sendReposne('error', 'not logged in');
+    } else{
+        $userid = $_SESSION['userid'];
+        $newSettings = $_POST['settings'];
+        $stmt = $mysqli->prepare("UPDATE users SET settings = ? WHERE U_id = ?");
+        $stmt->bind_param("si", $newSettings, $userid);
+        $stmt->execute();
+    }
+}
+
 ?>

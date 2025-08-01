@@ -74,6 +74,7 @@ main {
     padding: 40px;
     border-radius: 6px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    min-height:50vh;
 }
 
 
@@ -97,6 +98,19 @@ p {
     border-radius: 20px;
     font-size: 13px;
     color: #007acc;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.tagSelected {
+    display: inline-block;
+    margin: 5px 5px 5px 0;
+    padding: 5px 12px;
+    border: 1px solid #007acc;
+    border-radius: 20px;
+    font-size: 13px;
+    background: #007acc;
+    color: #fff;
     cursor: pointer;
     transition: background 0.2s ease;
 }
@@ -561,6 +575,7 @@ footer {
     animation: rotatecardbg 2s infinite;
     background: linear-gradient(120deg, #40a4ff, #74f3ff 50%, #74ffaa);
     margin:30px;
+    transition: transform 1s;
 }
 
 .cardInnerIg {
@@ -577,3 +592,10 @@ footer {
         padding: 5px;
         font-size: 14px;
     }
+
+.changepwmodalhidden {
+    display:none;
+}
+.changepwmodal {
+    display: block;
+}

@@ -24,21 +24,20 @@
             <div class="row" style=" align-items: center; justify-content: center;">
                 <div class="card">
                     <div class="cardInnerIg">
-                        <h2>Join Us</h2>
-                        <p>
-                            Explore our resources, participate in our community forums and be a part of the movement transforming mental health awareness.
-                        </p>
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="cardInnerIg">
                         <h2>Our Vision</h2>
                         <p>
                             Envisioning a future where mental health conversations are normalised stigma is dismantled, and everyone has the tools to lead a balanced life.
                         </p>
                     </div>
                 </div>
-
+                <div class="card">
+                    <a href="register.html" class="cardInnerIg">
+                        <h2>Join Us</h2>
+                        <p>
+                            Explore our resources, participate in our community forums and be a part of the movement transforming mental health awareness.
+                        </p>
+                    </a>
+                </div>
                 <div class="card">
                     <div class="cardInnerIg">
                         <h2>Our Mission</h2>
@@ -52,27 +51,29 @@
         <!--testbutterfly<div class="butterfly" hidden></div>-->
     </div>
     <script>
+        var t = 1 * Math.random() + 5
+
         function spawnswarm() {
-            var bcount = Math.random() * 150 + 10;
+            var bcount = Math.random() * 50 + 10;
             var butterflies = [];
             for (let i = 0; i < bcount; i++) {
                 var buttefly = document.createElement('div')
                 buttefly.className = 'butterfly';
                 var x = (Math.random() * 500) - 600 + 'px';
                 var y = (Math.random() * 500) - 600 + 'px';
-                buttefly.style.animationDelay = Math.random() + 's'
+                buttefly.style.animationDelay = (Math.random() / 2) + 's'
                 buttefly.style.left = x;
                 buttefly.style.bottom = y;
-                buttefly.style.transition = `bottom ${6 * Math.random() + 9}s, left ${6 * Math.random() + 9}s`;
+                buttefly.style.transition = `bottom ${t}s, left ${t}s`;
                 document.getElementsByClassName('mainpagestuff')[0].append(buttefly);
                 butterflies.push({ bfly: buttefly, x, y })
             }
             setTimeout(() => {
                 butterflies.forEach((b) => {
                     setTimeout(() => {
-                        b.bfly.style.left = '110vw';
-                        b.bfly.style.bottom = '110vh';
-                    }, Math.round(Math.random() * 4000))
+                        b.bfly.style.left = `calc(110vw - ${x})`;
+                        b.bfly.style.bottom = `calc(110vh - ${y})`;
+                    }, Math.round(Math.random() * 1000))
                 })
             }, 100)
         }
