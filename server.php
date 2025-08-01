@@ -138,34 +138,6 @@ if (isset($_GET['deleteDisorder'])) {
     }
 }
 
-/*if (isset($_POST['editDisorder'])){
-    $userData = getUDat();
-    if ($userData != false) { 
-        if ($userData['permission'] > 1) {
-            $disid = intval($_POST['disorderId']);
-            $name = $mysqli->real_escape_string($_POST['title']);
-            $desc = $mysqli->real_escape_string($_POST['desc']);
-            $mysqli->query("UPDATE disorders SET name = '$name', description = '$desc' WHERE id = '$disid'");
-            $mysqli->query("DELETE FROM disorder_tags WHERE disorderId = '$disid'");
-
-            if (!empty($_POST['tags'])) {
-                $tags = explode(',', $_POST['tags']);
-                foreach ($tags as $tag) {
-                    $t = trim($mysqli->real_escape_string($tag));
-                    if ($t !== '') {
-                        $mysqli->query("INSERT INTO disorder_tags (disorderId, tag) VALUES ('$disid', '$t')");
-                    }
-                }
-            }
-            sendReposne('success', 'edi');  
-        } else {
-            sendReposne('error', 'no perms');
-        }
-    } else {
-        sendReposne('error', 'notloggedin');     
-    }
-}*/
-
 function testValid($iput) {
     if (is_string($iput)){
         if (empty($iput)) {
@@ -188,49 +160,15 @@ function testValid($iput) {
     }
 }
 
-function validateInput($input) {
-    //Reject Empty Input
-    if (empty($input)) {
-        return "Input cannot be empty";
-        //placeholder return to simulate rejecting input
-    };
-
-    //Reject lengths above 100 or below 3
-    if (strlen($input) > 100) {
-        return "Input exceeds maximum allowed length";
-        //Placeholder return to simulate rejecting input
-    } else if (strlen($input) < 3) {
-        return "Input doesnt surpass minimum length";
-        //Placeholder return to simulate rejecting input
-    };
-
-    //Reject non-ASCII characters
-    if (!preg_match('/^[\x00-\x7F]*$/', $input)) {
-        return "Input must contain only ASCII characters.";
-        //Placeholder return to simulate rejecting input
+function doesaccountthingexist($val,$typ){
+    $stmt = $mysqli->query("SELECT * FROM users WHERE '$typ' = '$val'");
+    $dat = $stmt->fetch_assoc();
+    if ($dat){
+        return true;
+    } else {
+        return false;
     }
-
-    //Define harmful characters in array
-    $blacklist = ['"',"'",'`','\\','(',')','[',']','{','}','+','-','=','/','&','|','!',"\n","\r","\0"];
-    //Reject harmful characters
-    foreach ($blacklist as $char) {
-        //For every disallowed character check if in input
-        if (strpos($input, $char) !== false) {
-            return "Input contains disallowed characters.";
-            //Placeholder return to simulate rejecting input
-        }
-    }
-
-    //Specified whitelisted characters for alphanumeric and a few symbols
-    if (!preg_match('/^[a-zA-Z0-9_\-@.]+$/', $input)) {
-        return "Input contains invalid characters.";
-        //Placeholder return to simulate rejecting input
-    };
-
-    return "Input is valid.";
-   //Placeholder return to simulate not rejecting input
 }
-
 
 if (isset($_POST['register'])) {
     $email = trim($_POST['email']);
@@ -238,23 +176,33 @@ if (isset($_POST['register'])) {
     $pw = $_POST['password'];
 
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        sendReposne('fail', 'invalid email format');
+        sendReposne('fail', 'Invalid email format');
         exit;
     }
     if (strlen($pw) < 8) {
-        sendReposne('fail', 'password must be at least 8 characters');
+        sendReposne('fail', 'Password must be at least 8 characters');
+        exit;
+    }
+    if (doesaccountthingexist($uname, 'Username')){
+        sendReposne('fail', 'User with that username already exists');
+        exit;
+    }
+    if (doesaccountthingexist($email, 'Email')){
+        sendReposne('fail', 'User with that email already exists');
         exit;
     }
 
-    $stmt = $mysqli->prepare("INSERT INTO users (Username, Email, pasword) VALUES (?, ?, ?)");
-    $hashed = password_hash($pw, PASSWORD_DEFAULT);
-    $stmt->bind_param('sss', $uname, $email, $hashed);
+    if (testValid($email) && testValid($uname) && testValid($pw)){
+        $stmt = $mysqli->prepare("INSERT INTO users (Username, Email, pasword) VALUES (?, ?, ?)");
+        $hashed = password_hash($pw, PASSWORD_DEFAULT);
+        $stmt->bind_param('sss', $uname, $email, $hashed);
 
-    if ($stmt->execute()) {
-        $_SESSION['user_id'] = $mysqli->insert_id;
-        sendReposne('success', 'Registration successful');
-    } else {
-        sendReposne('error', 'Registration failed: ' . $stmt->error);
+        if ($stmt->execute()) {
+            $_SESSION['user_id'] = $mysqli->insert_id;
+            sendReposne('success', 'Registration successful');
+        } else {
+            sendReposne('error', 'Registration failed: ' . $stmt->error);
+        }
     }
 }
 
