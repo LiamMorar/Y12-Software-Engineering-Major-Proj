@@ -441,7 +441,7 @@ footer {
 .restofpage {
     z-index: 1;
     width: 80vw;
-    height: 100vh;
+    min-height: 100vh;
     background-color: #fff;
     align-items: center;
     justify-content: center;
@@ -478,7 +478,7 @@ footer {
     text-align: center;
     color: #fafafa;
     position: absolute;
-    left: calc(50vw - 200px);
+    left: calc(50vw - 110px);
     overflow: hidden;
     white-space: nowrap;
     font-size: 40px;
@@ -486,8 +486,8 @@ footer {
     border-right: .15em solid #fafafa;
     text-shadow: var(--shad);
     --shad: 1px 1px 1px black;
-    animation: typing 4s steps(18, end), blink-caret .75s step-end infinite;
-    width:400px;
+    animation: typing 2s steps(10, end), removeCaret step-end 2.75s forwards;
+    width:220px;
 }
 
 @keyframes typing {
@@ -496,12 +496,15 @@ footer {
     }
 
     to {
-        width: 400px
+        width: 220px
     }
 }
 
-@keyframes blinkcaret {
-    50% {
+@keyframes removeCaret {
+    99% {
+    
+    }
+    100% {
         border-color: transparent;
     }
 }
@@ -592,10 +595,30 @@ footer {
         padding: 5px;
         font-size: 14px;
     }
+    a.cardInnerIg {
+        color:black;
+        text-decoration:none;
+    }
 
-.changepwmodalhidden {
-    display:none;
-}
+    .changepwmodalhidden {
+        display: none;
+    }
 .changepwmodal {
     display: block;
+}
+
+#pagebar {
+    position:relative;
+    bottom:0px;
+    margin-top:10px;
+}
+
+    #pagebar .pager {
+        overflow-x:scroll;
+    }
+
+#prevcmds {
+    overflow-y:scroll;
+    height:200px;
+    background-color:#ccc;
 }

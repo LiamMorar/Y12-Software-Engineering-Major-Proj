@@ -35,6 +35,8 @@ function loginTest() {
                 if (window.location.href.includes('account.html')) {
                     loadsettings();
                 }
+                settings = JSON.parse(user.settings);
+                onloadUser();
                 return true;
             } else if (data.status === 'fail') {
                 if (document.getElementsByClassName('testLogin').length > 0) {
@@ -45,27 +47,120 @@ function loginTest() {
                 if (document.getElementsByClassName('forceLogin').length > 0) {
                     window.location.href = 'login.html'
                 }
+                onloadUser();
                 return false;
             }
         })
         .catch(err => {
+            onloadUser();
             return false;
         });
 }
+
+var settings = [];
+
+var defaultSettings = {
+    forumResultsPerPage: 10,
+    showTimestamp: true
+};
+
+var doSettOnce = false;
+
+function loadsettings() {
+    if (user && !doSettOnce) {
+        //console.log('loafsettings')
+        settings = JSON.parse(user.settings);
+        var cont = document.getElementById('settingsContainer');
+
+        Object.entries(defaultSettings).forEach(([key, val]) => {
+            var kee = (key)
+            if (settings[kee] == undefined) {
+                console.log(kee)
+                settings[kee] = val;
+            }
+        })
+
+        Object.entries(settings).forEach(([key, val]) => {
+            //console.log(setting)
+            //console.log(settings[setting])
+            var label = document.createElement('label');
+            label.setAttribute('for', `setting${key}`);
+            label.textContent = key;
+
+            //input types
+            let input;
+            if (typeof val === 'boolean') {
+                input = document.createElement('input');
+                input.type = 'checkbox';
+                input.checked = val;
+            } else if (!isNaN(val)) {
+                input = document.createElement('input');
+                input.type = 'number';
+                input.addEventListener('change', () => {
+                    input.value = Math.trunc(input.value);
+                })
+                input.value = val;
+            } else {
+                input = document.createElement('input');
+                input.type = 'text';
+                input.value = val;
+            }
+
+            input.id = `setting${key}`;
+            input.dataset.settingKey = key;
+            cont.appendChild(label);
+            cont.appendChild(input);
+            cont.appendChild(document.createElement('br'));
+        });
+
+        //show account info
+        if (document.getElementById('accUsername')) {
+            document.getElementById('accUsername').textContent = user.Username;
+            document.getElementById('accEmail').textContent = user.Email;
+            document.getElementById('accRole').textContent = roleNames[user.permission] || 'Unknown';
+        }
+        //do settings only once
+        doSettOnce = true;
+    }
+}
+
+function saveSettings() {
+    var newSettings = {};
+    var inputs = document.querySelectorAll('#settingsContainer input');
+
+    inputs.forEach(input => {
+        var key = input.dataset.settingKey;
+        if (input.type === 'checkbox') {
+            newSettings[key] = input.checked;
+        } else if (input.type === 'number') {
+            newSettings[key] = parseFloat(input.value);
+        } else {
+            newSettings[key] = input.value;
+        }
+    });
+
+    fetch('server.php?updateSettings=' + JSON.stringify(newSettings))
+}
+
+//first login test
 loginTest();
 
 function search(searchFor) {
+    //GET method the server php for string
     fetch(`server.php?search=${searchFor}`)
         .then(res => res.json())
         .then(data => {
+            //clear results div
             results.innerHTML = '';
             data.forEach((dat) => {
+                //for each result run the function creating the div
                 var da = JSON.parse(dat);
                 addDisToSearch(da.id, da.name, da.tags)
             })
         });
 }
 
+//
 if (tagContainer) {
     fetch(`server.php?tags=1`)
         .then(res => res.json())
@@ -118,8 +213,10 @@ function addDisToSearch(id, name, tags) {
     //if sometimes doesnt work but if the users perms mod or above allow to delete
     function addoptions() {
         if (user.permission > 1) {
+            //create options div
             var options = document.createElement('div')
             var deletebutton = document.createElement('button')
+            //add the delete button
             options.append(deletebutton);
             deletebutton.addEventListener('click', () => {
                 deleteDisorder(id, name);
@@ -183,67 +280,8 @@ function deleteDisorder(id, name) {
 var tagsContainer = document.getElementById("disorderTags");
 
 document.addEventListener('DOMContentLoaded', () => {
-    //login test
+    //login test, for some reason there needs to be one before DOMcontent loaded and after
     loginTest();
-    setTimeout(() => {
-        if (searchInput) {
-            //add the event listener for searchbar
-            searchInput.addEventListener('input', () => {
-                search(searchInput.value);
-            });
-            //set default search to all
-            search('')
-        }
-
-        if (disorderSearch) {
-            //if the search tag in url
-            //    console.log(disorderSearch)
-            fitlerTag(disorderSearch)
-        }
-    }, 100);
-    if(disorderId) {
-        fetch("server.php?getDisorder=" + disorderId)
-            .then(response => response.json())
-            .then(data => {
-                //set the title to the retrieved title
-                document.getElementById("disorderTitle").innerHTML = data.name;
-                //remanants from the old advanced css stuff, but should set the description element to the description
-                if (data.description.includes(divDefSep)) {
-                    var disDescriptor = data.description.split(divDefSep)
-                    disorderDescription.innerHTML = disDescriptor[1];
-                    divDefs = JSON.parse(disDescriptor[0])
-                } else {
-                    disorderDescription.innerHTML = data.description;
-                }
-
-                tagsContainer.innerHTML = '';
-                var tags = JSON.parse(data.tags);
-                tags.forEach(tag => {
-                    var span = document.createElement("a");
-                    span.className = "tag";
-                    span.innerHTML = tag.tag;
-                    tagsContainer.appendChild(span);
-                    span.addEventListener('click', () => {
-                        if (!editMode) {
-                            window.location.href = 'search.html?search=' + String(tag.tag);
-                        } else {
-                            console.log(String(tag.tag))
-                        }
-                    })
-                });
-                if (user) {
-                    var edBtn = document.createElement('button');
-                    edBtn.innerText = 'Edit';
-                    console.log('edit')
-                    edBtn.addEventListener('click', (e) => edittoggle(e))
-                    document.getElementsByTagName('main')[0].append(edBtn)
-                }
-            })
-            .catch(err => {
-                //if no then set to blank
-                disorderDescription.innerHTML = "<p>No disorder ID provided.</p>";
-            });
-    }
 })
 
 //reusablehtmlcode
@@ -306,6 +344,7 @@ function makeSel(tagName) {
 if (tb) {
     tb.addEventListener('click', e => {
         var cmd = e.target.dataset.cmd;
+        //changes the selection based on cmd custom attribute (proof i can do switch statements and custom attributes)
         if (!cmd) return;
         switch (cmd) {
             case 'bold':
@@ -498,80 +537,6 @@ function logout() {
         .then(window.location.reload());
 }
 
-var doSettOnce = false;
-
-function loadsettings() {
-    if (user && !doSettOnce) {
-        //console.log('loafsettings')
-        settings = JSON.parse(user.settings);
-        var cont = document.getElementById('settingsContainer');
-
-        Object.entries(settings).forEach(([key, val]) => {
-            //console.log(setting)
-            //console.log(settings[setting])
-            var label = document.createElement('label');
-            label.setAttribute('for', `setting${key}`);
-            label.textContent = key;
-
-            //input types
-            let input;
-            if (typeof val === 'boolean') {
-                input = document.createElement('input');
-                input.type = 'checkbox';
-                input.checked = val;
-            } else if (!isNaN(val)) {
-                input = document.createElement('input');
-                input.type = 'number';
-                input.value = val;
-            } else {
-                input = document.createElement('input');
-                input.type = 'text';
-                input.value = val;
-            }
-
-            input.id = `setting${key}`;
-            input.dataset.settingKey = key;
-            cont.appendChild(label);
-            cont.appendChild(input);
-            cont.appendChild(document.createElement('br'));
-        });
-
-        //show account info
-        if (document.getElementById('accUsername')) {
-            document.getElementById('accUsername').textContent = user.Username;
-            document.getElementById('accEmail').textContent = user.Email;
-            document.getElementById('accRole').textContent = roleNames[user.permission] || 'Unknown';
-        }
-        //do settings only once
-        doSettOnce = true;
-    }
-}
-
-function saveSettings() {
-    var newSettings = {};
-    var inputs = document.querySelectorAll('#settingsContainer input');
-
-    inputs.forEach(input => {
-        var key = input.dataset.settingKey;
-        if (input.type === 'checkbox') {
-            newSettings[key] = input.checked;
-        } else if (input.type === 'number') {
-            newSettings[key] = parseFloat(input.value);
-        } else {
-            newSettings[key] = input.value;
-        }
-    });
-
-    var params = new URLSearchParams();
-    params.append('updateSettings', '1');
-    params.append('settings', JSON.stringify(newSettings));
-
-    fetch('server.php', {
-        method: 'POST',
-        body: params
-    })
-}
-
 
 //used to be a modal btw
 if (document.getElementById('cahngepw')) {
@@ -618,71 +583,74 @@ var forumId = new URLSearchParams(window.location.search).get("forumid");
 var forumresults = document.getElementById('forumsresults');
 var forumtitle = document.getElementById('forumtitleshow');
 
-function loadforumposts() {
-    fetch('server.php?GetForums=1')
+function loadforumposts(page = 1) {
+    fetch(`server.php?GetForums=${settings.forumResultsPerPage}&page=${page}`)
         .then(res => res.json())
         .then(data => {
             if (data.status === 'success') {
+                var paylod = JSON.parse(data.message);
+                var forums = paylod.forums;
+                var total = paylod.total;
+                var curr = paylod.page;
+                var limit = paylod.limit;
+                var pages = Math.ceil(total / limit);
+
                 forumresults.innerHTML = '';
-                var formumsresults = JSON.parse(data.message);
-                formumsresults.forEach((forum) => {
-                    //add the forum post to the html as a link that can be clicked
-                    forumresults.innerHTML += `<a class="forumPost" href="forumpage.html?forumid=${forum.fP_Id}"><b>${forum.FTitle}</b> <br> <span>${forum.FDesc}</span></a>`
+
+                forums.forEach(forum => {
+                    //create a div containing both the options and the link
+                    var divwithboth = document.createElement('div')
+                    forumresults.appendChild(divwithboth)
                     //if user is admin or above then allow them to delete forum posts
                     if (user.permission > 2) {
-                        forumresults.innerHTML += '<button onclick="deleteforum(' + forum.fP_Id + ')"></button>';
+                        divwithboth.innerHTML += '<button onclick="deleteforum(' + forum.fP_Id + ')"></button>';
                     };
+                    //add the forum post to the html as a link that can be clicked
+                    divwithboth.innerHTML += `<a class="forumPost" href="forumpage.html?forumid=${forum.fP_Id}"><b>${forum.FTitle}</b> <br> <span>${forum.FDesc}</span></a>`
                 });
-            }
-        })
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    if (forumresults) {
-        loadforumposts();
-    }
-    if (forumtitle && forumId) {
-        //get forum stuff comments and forum
-        fetch('server.php?getForumInfo=' + String(forumId))
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    //get the forum part of the forum get
-                    var formuminfo = JSON.parse(data.message).forum;
-                    forumtitle.innerText = formuminfo.FTitle;
-                    document.getElementById('forumdesc').innerText = formuminfo.FDesc;
-                    document.getElementById('forumdate').innerText = formuminfo.DateMade; 
-                    document.getElementById('hiddneID').innerHTML = formuminfo.fP_Id;
-                    //get the comments part of the forum get
-                    var commentinfo = JSON.parse(data.message).comments;
-                    //create a comment element for every comment in the forum post thing
-                    commentinfo.forEach((comment) => {
-                        var commentDiv = document.createElement('div');
-                        commentDiv.innerText = comment.comment;
-                        var tstamp = document.createElement('span')
-                        tstamp.className = 'tStamp';
-                        tstamp.innerText = comment.postedon;
-                        commentDiv.prepend(document.createElement('br'))
-                        commentDiv.prepend(tstamp)
-                        commentDiv.className = 'comment';
-                        document.getElementById('comments').append(commentDiv);
-                        //get some user data from poster like specifically their name and role, no passwords
-                        fetch('server.php?simpleudat=' + comment.posterid)
-                            .then(res => res.json())
-                            .then(dat => {
-                                var commentUInfo = document.createElement('div')
-                                if (dat.status == 'success') {
-                                    var posterinfo = json.parse(dat.message);
-                                    commentUInfo.innerHTML = '<div class="posterinfo"><b>' + posterinfo.name + '</b><span>' + roleNames[posterinfo.role] + '</span></div>'
-                                    //add the user info stuff at the top of the comment
-                                    commentDiv.prepend(commentUInfo)
-                                };
-                            })
-                    })
+                
+                let pager = document.createElement('div');
+                pager.className = 'pager';
+                if (curr > 1) {
+                    let prev = document.createElement('button');
+                    prev.textContent = '<';
+                    pager.appendChild(prev);
+                    prev.addEventListener('click', () => {
+                        loadforumposts(curr - 1);
+                    });
                 }
-            })
-    }
-})
+                if (isFinite(pages)) {
+                    for (let p = 1; p <= pages; p++) {
+                        let btn = document.createElement('button');
+                        btn.textContent = p;
+                        pager.appendChild(btn);
+                        if (p === curr) {
+                            btn.disabled = true;
+                        }
+                        btn.addEventListener('click', () => {
+                            loadforumposts(p);
+                        });
+                    }
+                }
+                if (curr < pages) {
+                    let next = document.createElement('button');
+                    next.textContent = '>';
+                    pager.appendChild(next);
+                    next.addEventListener('click', () => {
+                        loadforumposts(curr + 1);
+                    });
+                }
+                if (pages > 0) {
+                    var pgbar = document.getElementById('pagebar')
+                    pgbar.innerHTML = '';
+                    var bdcr = pgbar.getBoundingClientRect();
+                    //pgbar.style.top = ((limit - forums.length) * 170) + 'px';
+                    forumresults.style.minHeight = ((limit - forums.length) * 170) + 'px';
+                    pgbar.appendChild(pager);
+                }
+            }
+        });
+}
 
 //delete forum post
 function deleteforum(id) {
@@ -766,14 +734,6 @@ function adminpgload() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    if (adminpg) {
-        //console.log('adminpa')
-        //wait half a second to load thing to be approved after the DOM stuff loads, because otherwise the user doesnt load in time
-        setTimeout(adminpgload,500)
-    }
-})
-
 //approve like the creation of entries in admin page
 function aprovecreate(id,t) {
     if (user) {
@@ -816,7 +776,7 @@ function selectTab(selector) {
         t.style.display = 'none';
     })
     //set the one thats being selected to be visble
-    document.getElementById(selector).style.display = 'flex';
+    document.getElementById(selector).style.display = 'block';
 }
 
 
@@ -949,4 +909,163 @@ function cardeventl(card) {
     card.addEventListener('mouseout', () => {
         card.style.transform = 'perspective(1000px)'
     })
+}
+
+var doonloaduseronce = true;
+
+function onloadUser() {
+    if (doonloaduseronce) {
+        doonloaduseronce = false;
+        if (searchInput) {
+            //add the event listener for searchbar
+            searchInput.addEventListener('input', () => {
+                search(searchInput.value);
+            });
+            //set default search to all
+            search('')
+        }
+
+        if (disorderSearch) {
+            //if the search tag in url
+            //    console.log(disorderSearch)
+            fitlerTag(disorderSearch)
+        }
+
+        if (disorderId) {
+            fetch("server.php?getDisorder=" + disorderId)
+                .then(response => response.json())
+                .then(data => {
+                    //set the title to the retrieved title
+                    document.getElementById("disorderTitle").innerHTML = data.name;
+                    //remanants from the old advanced css stuff, but should set the description element to the description
+                    if (data.description.includes(divDefSep)) {
+                        var disDescriptor = data.description.split(divDefSep)
+                        disorderDescription.innerHTML = disDescriptor[1];
+                        divDefs = JSON.parse(disDescriptor[0])
+                    } else {
+                        disorderDescription.innerHTML = data.description;
+                    }
+
+                    tagsContainer.innerHTML = '';
+                    var tags = JSON.parse(data.tags);
+                    tags.forEach(tag => {
+                        var span = document.createElement("a");
+                        span.className = "tag";
+                        span.innerHTML = tag.tag;
+                        tagsContainer.appendChild(span);
+                        span.addEventListener('click', () => {
+                            if (!editMode) {
+                                window.location.href = 'search.html?search=' + String(tag.tag);
+                            } else {
+                                console.log(String(tag.tag))
+                            }
+                        })
+                    });
+                    if (user) {
+                        if (user.banned == 0) {
+                            var edBtn = document.createElement('button');
+                            edBtn.innerText = 'Edit';
+                            console.log('edit')
+                            edBtn.addEventListener('click', (e) => edittoggle(e))
+                            document.getElementsByTagName('main')[0].append(edBtn)
+                        }
+                    }
+                })
+                .catch(err => {
+                    //if no then set to blank
+                    disorderDescription.innerHTML = "<p>No disorder ID provided.</p>";
+                });
+        }
+        if (forumresults) {
+            //dont ask why theres a timeout it just doesnt load without it
+            setTimeout(loadforumposts,200)
+        }
+        if (forumtitle && forumId) {
+            //get forum stuff comments and forum
+            fetch('server.php?getForumInfo=' + String(forumId))
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        //get the forum part of the forum get
+                        var formuminfo = JSON.parse(data.message).forum;
+                        forumtitle.innerText = formuminfo.FTitle;
+                        document.getElementById('forumdesc').innerText = formuminfo.FDesc;
+                        document.getElementById('forumdate').innerText = formuminfo.DateMade;
+                        document.getElementById('hiddneID').innerHTML = formuminfo.fP_Id;
+                        if (formuminfo.ShowUser > 0) {
+                            fetch('server.php?simpleudat=' + formuminfo.U_id)
+                                .then(res => res.json())
+                                .then(dat => {
+                                    if (dat.status == 'success') {
+                                        document.getElementById('forumAuthor').innerText = json.parse(dat.message).name;
+                                    };
+                                })
+                        }
+                        //get the comments part of the forum get
+                        var commentinfo = JSON.parse(data.message).comments;
+                        //create a comment element for every comment in the forum post thing
+                        commentinfo.forEach((comment) => {
+                            var commentDiv = document.createElement('div');
+                            commentDiv.innerText = comment.comment;
+                            var tstamp = document.createElement('span')
+                            tstamp.className = 'tStamp';
+                            tstamp.innerText = comment.postedon;
+                            commentDiv.prepend(document.createElement('br'))
+                            commentDiv.prepend(tstamp)
+                            commentDiv.className = 'comment';
+                            document.getElementById('comments').append(commentDiv);
+                            //get some user data from poster like specifically their name and role, no passwords
+                            fetch('server.php?simpleudat=' + comment.posterid)
+                                .then(res => res.json())
+                                .then(dat => {
+                                    var commentUInfo = document.createElement('div')
+                                    if (dat.status == 'success') {
+                                        var posterinfo = json.parse(dat.message);
+                                        commentUInfo.innerHTML = '<div class="posterinfo"><b>' + posterinfo.name + '</b><span>' + roleNames[posterinfo.role] + '</span></div>'
+                                        //add the user info stuff at the top of the comment
+                                        commentDiv.prepend(commentUInfo)
+                                    };
+                                })
+                        })
+                    }
+                })
+        }
+
+        if (adminpg) {
+            adminpgload();
+            document.getElementById('adminCMD').addEventListener('change', () => {
+                runadmincmd()
+            });
+
+            document.getElementById('adminCMDsubmit').addEventListener('click', () => {
+                runadmincmd()
+            });
+
+        }
+    }
+}
+
+function runadmincmd() {
+    var cmd = document.getElementById('adminCMD').value.split('/')[1];
+    if (cmd) {
+        //split up cmd into parts
+        var cmdargs = json.stringify(cmd.split(' '));
+        fetch('server.php?runcmd=' + cmdargs)
+            .then(res => res.json())
+            .then(data => {
+                //show cmd run result
+                document.getElementById('prevcmds').innerHTML += `> [${data.status}]: ${data.message}`
+            })
+            .catch(err => {
+                //if error show the error in the cmd thing
+                document.getElementById('prevcmds').innerHTML += '> ' + err;
+            })
+    } else {
+        //if doent contain a / then display help
+        document.getElementById('prevcmds').innerHTML += "> Not a valid command try using '/help' for commands";
+    }
+    //clear cmd input
+    document.getElementById('adminCMD').value = ''
+    //add line break after
+    document.getElementById('prevcmds').innerHTML += '</br>'
 }

@@ -15,6 +15,7 @@
             <form id="addFormPost" method="POST" action="server.php">
                 <input type="text" name="postForumTitle" placeholder="Title" required>
                 <textarea type="text" name="postForumDesc" placeholder="Content goes here" required></textarea>
+                <input  type="checkbox" name="anonymouseMode" />
                 <button type="submit" name="forumPost">Add Post</button>
             </form>
         </div>
@@ -27,9 +28,7 @@
                     <button type="button" data-cmd="bold"><b>B</b></button>
                     <button type="button" data-cmd="it"><i>I</i></button>
                     <button type="button" data-cmd="ul"><u>U</u></button>
-                    <button type="button" data-cmd="ulist">. List</button>
-                    <button type="button" id="imgBtn">Image</button>
-                    <button type="button" id="vidBtn">Video</button>
+                    <button type="button" data-cmd="ulist">● List</button>
                 </div>
 
                 <div id="disorderDescription" class="editable" contenteditable="true" style="min-height:200px; border:1px solid #ccc; padding:10px;"></div>
