@@ -89,7 +89,8 @@ p {
 }
 
 #tagContainer span,
-.tag {
+.tag,
+.tagclicky {
     display: inline-block;
     margin: 5px 5px 5px 0;
     padding: 5px 12px;
@@ -116,9 +117,11 @@ p {
 }
 
     #tagContainer span:hover,
-    .tag:hover {
-        background: #007acc;
-        color: #fff;
+    .tag:hover, 
+    .selected
+    {
+        background: #007acc !important;
+        color: #fff !important;
     }
 
 input, textarea {
@@ -622,3 +625,26 @@ footer {
     height:200px;
     background-color:#ccc;
 }
+
+.tabSwitchinBar {
+    display:flex;
+    flex-direction:row;
+    width:100%;
+    justify-content:space-evenly;
+}
+
+    .tabSwitchinBar button {
+        display: flex;
+        background-color: white;
+        color: black;
+        width: 100%;
+        border-radius:0px;
+        border-bottom: 2px solid transparent;
+    }
+        .tabSwitchinBar button:hover {
+            border-bottom: 2px solid grey;
+        }
+
+        .tabSwitchinBar button.selectedtab {
+            border-bottom: 2px solid #007acc;
+        }

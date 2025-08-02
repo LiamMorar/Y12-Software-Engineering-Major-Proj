@@ -119,13 +119,26 @@ if (isset($_GET['getDisorder'])){
     getDisorder("SELECT * FROM disorders WHERE id = '$id'");
 }
 
-if (isset($_GET['tag'])) {
-    $tag = $mysqli->real_escape_string($_GET['tag']);
+if (isset($_GET['searchtag'])) {
+    $tagssearc = json_decode($_GET['searchtag']);
+    $conds = [];
+    foreach ($tagssearc as $ta) {
+        $conds[] = "t.tag = '$ta'";
+    }
+    $statemntadd = implode(' OR ', $conds);
+    $count = count($tagssearc);
+
     getAllDisorder("SELECT d.name, d.id
-      FROM disorders d
-      JOIN disorder_tags t ON d.id = t.disorderId
-      WHERE t.tag = '$tag'");
+        FROM disorders d
+       WHERE d.id IN (
+        SELECT disorderId
+        FROM disorder_tags t
+        WHERE ($statemntadd)
+        GROUP BY disorderId
+        HAVING COUNT(DISTINCT t.tag) = $count
+       )");
 }
+
 
 if (isset($_GET['search'])) {
     $search = $mysqli->real_escape_string($_GET['search']);
@@ -174,8 +187,11 @@ function testValid($iput) {
     }
 }
 
+//does user exist
 function doesaccountthingexist($val,$typ){
+    //declare the var as global
     global $mysqli;
+    //get if has
     $stmt = $mysqli->query("SELECT * FROM users WHERE '$typ' = '$val'");
     $dat = $stmt->fetch_assoc();
     if ($dat){
@@ -185,11 +201,14 @@ function doesaccountthingexist($val,$typ){
     }
 }
 
+//register function
 if (isset($_POST['register'])) {
+    //get POST stuff
     $email = trim($_POST['email']);
     $uname = trim($_POST['username']);
     $pw = $_POST['password'];
 
+    //validation stuff
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         sendReposne('fail', 'Invalid email format');
         exit;
@@ -207,6 +226,7 @@ if (isset($_POST['register'])) {
         exit;
     }
 
+    //more validation
     if (testValid($email) && testValid($uname) && testValid($pw)){
         $stmt = $mysqli->prepare("INSERT INTO users (Username, Email, pasword) VALUES (?, ?, ?)");
         $hashed = password_hash($pw, PASSWORD_DEFAULT);
@@ -221,20 +241,26 @@ if (isset($_POST['register'])) {
     }
 }
 
+//login function
 if (isset($_POST['login'])) {
+    //get POST stuff
     $uname = trim($_POST['username']);
     $pw = $_POST['password'];
 
+    //SQL query to get stuff
     $stmt = $mysqli->query("SELECT * FROM users WHERE Username = '$uname'");
     $userData = $stmt->fetch_assoc();
+    //get the userdata and test if the passwords match
     if ($userData) {
         if (password_verify($pw, $userData['pasword'])) {
+            //do session id
             $_SESSION['user_id'] = $userData['U_id'];
             sendReposne('success','Login successful');
         } else {
             sendReposne('error', 'Invalid username or password');
         }
     } else{
+        //if no user with username then do email
         $stmt = $mysqli->query("SELECT * FROM users WHERE Email = '$uname'");
         $userData = $stmt->fetch_assoc();
         if ($userData) {
@@ -251,12 +277,16 @@ if (isset($_POST['login'])) {
     $stmt->close();
     exit;
 }
+//get logged in
 if (isset($_GET['logged_in'])) {
+    //if session
     if (isset($_SESSION['user_id'])) {
         $UID = $_SESSION['user_id'];
+        //get data from User id
         $stmt = $mysqli->query("SELECT * FROM users WHERE U_id = '$UID'");
         $userData = $stmt->fetch_assoc();
         if ($userData) {
+            //sedn the userdata
             sendReposne('success', json_encode($userData));
         } else {
             sendReposne('error', $UID);   
@@ -267,10 +297,12 @@ if (isset($_GET['logged_in'])) {
 }
 
 if (isset($_GET['logout'])){
+    //logout, destroy session
     session_destroy();
 }
 
 if (isset($_GET['GetForums'])) {
+    //get the vars for the pages stuff
     $limit = intval($_GET['GetForums']);
     $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
     $offset = ($page - 1) * $limit;
@@ -282,6 +314,7 @@ if (isset($_GET['GetForums'])) {
     $stmt->bind_param("ii", $limit, $offset);
     $stmt->execute();
     $forums = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    //sedn the stuff
     sendReposne('success', json_encode([
         'forums' => $forums,
         'total'  => $total,
@@ -290,15 +323,18 @@ if (isset($_GET['GetForums'])) {
     ]));
 }
 
-
+//create post
 if (isset($_POST['postForumTitle'])){
     $title = $_POST['postForumTitle'];
     $desc = $_POST['postForumDesc'];
+    //get user id
     $userId = getUDat()['U_id'];
+    //if anon mode
     $showUser = 1;
     if ($_POST['anonymouseMode']){
         $showUser = 0;
     };
+    //if logged in then make post
     if ($getUDat()){
         $mysqli->query("INSERT INTO forumposts (FTitle, FDesc, U_id, ShowUser) VALUES ('$title', '$desc', '$userId', '$showUser')");
         $forumid = $mysqli->insert_id;
@@ -306,23 +342,32 @@ if (isset($_POST['postForumTitle'])){
     }
 }
 
+//get the forum stuff
 if (isset($_GET['getForumInfo'])){
     $fpid = $_GET['getForumInfo'];
     $stmt = $mysqli->query("SELECT * FROM forumposts WHERE fP_Id = '$fpid'"); 
     $forums = $stmt->fetch_assoc();
+    //if show user then well show user
     if ($forums['ShowUser'] > 0){
+        //get user and if not the same user then remove the user id to keep anonymity
         $udat = getUDat();
         if ($udat){
             if ($udat['U_id'] != $forums['U_id']){
                 unset($forums['U_id']);
+            } else {
+                unset($forums['U_id']);
+            }
+        } else {
+                unset($forums['U_id']);
             };
-        };
     }
+    //get all comments
     $stmt = $mysqli->query("SELECT * FROM comments WHERE forumid = '$fpid'"); 
     $comments = $stmt->fetch_all(MYSQLI_ASSOC);  
     sendReposne('success',json_encode(["forum" => $forums, "comments" => $comments]));
 }
 
+//get the very basics of userdata just name and perms
 if (isset($_GET['simpleudat'])){
     $uid = $_GET['simpleudat'];
     $stmt = $mysqli->query("SELECT * FROM users WHERE U_id = '$uid'");
@@ -334,13 +379,16 @@ if (isset($_GET['simpleudat'])){
     }
 }
 
+//add a comment
 if (isset($_POST['addcomment'])){
     $comment = $_POST['comment'];
     $forumid = $_POST['forumId'];
     $userdat = getUDat();
+    //make sure usr has unbanned account
     if ($userdat){
         if ($userdat['banned'] == 0){
             $usid = $userdat["U_id"];
+            //add comment
             $mysqli->query("INSERT INTO comments (forumid, comment, posterid) VALUES ('$forumid', '$comment', '$usid')");
             header("Location: forumpage.html?forumid=$forumid");
         } else {
@@ -351,21 +399,29 @@ if (isset($_POST['addcomment'])){
     }
 }
 
+//approve the creation of the entry
 if (isset($_GET['approveCreate'])) {
+    //make sure logged in
     $userdat = getUDat();
     if ($userdat){
+        //if the approver is a admin
         if ($userdat['permission'] > 2){
             $idtoapprove = $_GET['approveCreate'];
+            //set approved to 1
             $mysqli->query("UPDATE disorders SET approved = 1 WHERE id = '$idtoapprove'");
             sendReposne('success', 'Approved entry');
         }
     }
 }
 
+//deny entry creation
 if (isset($_GET['dontApproveCreate'])) {
+    //get user, if logged in
     $userdat = getUDat();
     if ($userdat){
+        //if approver is admin
         if ($userdat['permission'] > 2){
+            //if not approved then delete the entry
             $idtoapprove = $_GET['dontApproveCreate'];
             $mysqli->query("DELETE FROM disorders WHERE id = '$idtoapprove'");
             sendReposne('success', 'Denied entry');
@@ -373,6 +429,7 @@ if (isset($_GET['dontApproveCreate'])) {
     }
 }
 
+//get all unapproved entries
 if (isset($_GET['allUnapproved'])) {
     $userdat = getUDat();
     if ($userdat){
@@ -388,6 +445,7 @@ if (isset($_GET['allUnapproved'])) {
     }
 }
 
+//approve forum post
 if (isset($_GET['approveForum'])) {
     $userdat = getUDat();
     if ($userdat){
@@ -399,6 +457,7 @@ if (isset($_GET['approveForum'])) {
     }
 }
 
+//deny forum post
 if (isset($_GET['dontApproveForum'])) {
     $userdat = getUDat();
     if ($userdat){
@@ -410,6 +469,7 @@ if (isset($_GET['dontApproveForum'])) {
     }
 }
 
+//get all unapproved forum posts
 if (isset($_GET['allUnapprovedForum'])) {
     $userdat = getUDat();
     if ($userdat){
@@ -425,6 +485,7 @@ if (isset($_GET['allUnapprovedForum'])) {
     }
 }
 
+//get all the unaproved edits 
 if (isset($_GET['allUnapprovedEdits'])) {
     $result = $mysqli->query("SELECT * FROM edits WHERE approved = 0");
     $edits = [];
@@ -434,23 +495,30 @@ if (isset($_GET['allUnapprovedEdits'])) {
     sendReposne("success", json_encode($edits));
 }
 
+//approve edit
 if (isset($_GET['approveEdit'])) {
+    //if get the edits id
     $editId = intval($_GET['approveEdit']);
     $edit = $mysqli->query("SELECT * FROM edits WHERE ed_Id = $editId")->fetch_assoc();
     if ($edit) {
-        $disid = $edit['disorderid'];
+        //if the edit is read then get the disorders id
+        $disid = $edit['disorderid']; 
 
+        //set the disorder to the stuff in the edit
         $stmt = $mysqli->prepare("UPDATE disorders SET name = ?, description = ? WHERE id = ?");
         $stmt->bind_param("ssi", $edit['name'], $edit['desription'], $disid);
         $stmt->execute();
 
+        //set the edit to approved
         $mysqli->query("UPDATE edits SET approved = 1 WHERE ed_Id = $editId");
 
+        //delete the disorder tags to readd later
         $mysqli->query("DELETE FROM disorder_tags WHERE disorderId = '$disid'");
-
+            //if there are some tags
             if (!empty($edit['tags'])) {
                 $tags = explode(',', $edit['tags']);
                 foreach ($tags as $tag) {
+                    //for every tag add a tag
                     $t = trim($mysqli->real_escape_string($tag));
                     if ($t !== '') {
                         $mysqli->query("INSERT INTO disorder_tags (disorderId, tag) VALUES ('$disid', '$t')");
@@ -465,13 +533,15 @@ if (isset($_GET['approveEdit'])) {
     exit;
 }
 
+//deny edit
 if (isset($_GET['dontApproveEdit'])) {
+    //delete from edit
     $editId = intval($_GET['dontApproveEdit']);
     $mysqli->query("DELETE FROM edits WHERE ed_Id = $editId");
     sendReposne("success", "Edit denied");
 }
 
-
+//create edit
 if (isset($_POST['propoEdit'])) {
     $disorderId = intval($_POST['disorderId']);
     $title = $_POST['title'];
@@ -481,11 +551,14 @@ if (isset($_POST['propoEdit'])) {
 
     $stmt = $mysqli->prepare("INSERT INTO edits (disorderid, userid, name, desription, tags) VALUES (?, ?, ?, ?, ?)");
     $stmt->bind_param("iisss", $disorderId, $userId, $title, $desc, $tags);
+    $stmt->execute();
+    sendReposne('success',$mysqli->insert_id);
 }
 
-
+//remove forum post
 if (isset($_GET['deleteforumpost'])){
     $userdat = getUDat();
+    //if user is above mod
     if ($userdat['permission'] > 1){
             $fpid = $_GET['deleteforumpost'];
             $mysqli->query("DELETE FROM forumposts WHERE fP_Id = '$fpid'");
@@ -496,10 +569,13 @@ if (isset($_GET['deleteforumpost'])){
     }
 }
 
+//change password
 if (isset($_POST['changePw'])){
     $userdat = getUDat();
+    //if the old password is the password
     if (password_verify($_POST['olPw'],$userdat['pasword'])){
         if ($userdat){
+            //if the passwords are the same then set the password
             $pw1 = $_POST['newPw1'];
             $pw2 = $_POST['newPw2'];
             if ($pw1 == $pw2){
@@ -517,11 +593,14 @@ if (isset($_POST['changePw'])){
     }
 }
 
+//update setting
 if (isset($_GET['updateSettings'])) {
     $userdat = getUDat();
+    //if not logged in send eror
     if (!$userdat) {
         sendReposne('error', 'not logged in');
     } else{
+        //update the setting
         $userid = $userdat['U_id'];
         $newSettings = $_GET['updateSettings'];
         $stmt = $mysqli->prepare("UPDATE users SET settings = ? WHERE U_id = ?");
@@ -530,20 +609,25 @@ if (isset($_GET['updateSettings'])) {
     };
 };
 
+//run command
 if (isset($_GET['runcmd'])) {
     $userdat = getUDat();
     if (!$userdat) {
         sendReposne('error', 'not logged in');
     } else {
+        //if user running command is admin
         if ($userdat['permission'] > 2){
+            //break up command arguments
             $cmdargs = json_decode($_GET['runcmd']);
             if ($cmdargs[0] == 'ban') {
+                //ban by username
                 $banee = $cmdargs[1];
                 $stmt = $mysqli->prepare("UPDATE users SET banned = 1 WHERE Username = '$banee'");
                 if ($stmt->execute()){
                     sendReposne('success', 'Successfully banned '. $cmdargs[1]);
                 }
             } else if ($cmdargs[0] == 'banEmail') {
+                //ban by email
                 $banee = $cmdargs[1];
                 $stmt = $mysqli->prepare("UPDATE users SET banned = 1 WHERE Email = '$banee'");
                 $stmt->bind_param("i",$cmdargs[1]);
@@ -551,20 +635,23 @@ if (isset($_GET['runcmd'])) {
                     sendReposne('success', 'Successfully banned '. $cmdargs[1]);
                 }
             } else if ($cmdargs[0] == 'unban') {
+                //unban by username
                 $banee = $cmdargs[1];
                 $stmt = $mysqli->prepare("UPDATE users SET banned = 0 WHERE Username = '$banee'");
                 if ($stmt->execute()){
-                    sendReposne('success', 'Successfully banned '. $cmdargs[1]);
+                    sendReposne('success', 'Successfully unbanned '. $cmdargs[1]);
                 }
             } else if ($cmdargs[0] == 'unbanEmail') {
+                //unban by email
                 $banee = $cmdargs[1];
                 $stmt = $mysqli->prepare("UPDATE users SET banned = 0 WHERE Email = '$banee'");
                 $stmt->bind_param("i",$cmdargs[1]);
                 if ($stmt->execute()){
-                    sendReposne('success', 'Successfully banned '. $cmdargs[1]);
+                    sendReposne('success', 'Successfully unbanned '. $cmdargs[1]);
                 }
             } else if ($cmdargs[0] == 'help'){
-                sendReposne('success', 'list of commands: </br>> /ban <username>: bans a user based on username </br>>  /banEmail <email>: bans a user based on email');
+                //give a help message
+                sendReposne('success', 'list of commands: </br>> /ban <username>: bans a user based on username </br>>  /banEmail <email>: bans a user based on email </br>> /unban <username>: unbans a user based on username </br>>  /unbanEmail <email>: unbans a user based on email');
             };
         }
         sendReposne('error', 'Incorrect permissions.');

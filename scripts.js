@@ -160,7 +160,8 @@ function search(searchFor) {
         });
 }
 
-//
+var tags = [];
+
 if (tagContainer) {
     fetch(`server.php?tags=1`)
         .then(res => res.json())
@@ -169,29 +170,50 @@ if (tagContainer) {
             tags.unshift('all');
             //for every tag make a span
             tagContainer.innerHTML = tags.map(tag =>
-                `<span onclick="fitlerTag('${tag}')">${tag}</span>`
+                `<span class="tagclicky" onclick="fitlerTag('${tag}')">${tag}</span>`
             ).join('');
         });
 }
 
 //function to filter by tag
 function fitlerTag(tag) {
+    
     var t = tag
     if (t == 'all') {
         //if tag is all then set search to blank
         search('')
+        tags = [];
         //window.location.href = 'search.html';
     } else {
-        fetch(`server.php?tag=${t}`)
-            .then(res => res.json())
-            .then(data => {
-                //clear results and for each retrieved entry run the addDisToSearch function
-                results.innerHTML = '';
-                data.forEach((dat) => {
-                    var da = JSON.parse(dat)
-                    addDisToSearch(da.id, da.name, da.tags)
-                })
-            });
+        if (tags.includes(t)) {
+            tags.splice(tags.indexOf(t), 1);
+        } else {
+            tags.push(t)
+        };
+        document.querySelectorAll('.tagclicky').forEach((t) => {
+            if (tags.includes(t.innerText)) {
+                console.log(t)
+                t.className = 'tagclicky selected';
+            } else {
+                t.className = 'tagclicky';
+            }
+        })
+        tags.forEach((tag) => {
+        })
+        if (tags.length < 1) {
+            search('')
+        } else {
+            fetch(`server.php?searchtag=${json.stringify(tags)}`)
+                .then(res => res.json())
+                .then(data => {
+                    //clear results and for each retrieved entry run the addDisToSearch function
+                    results.innerHTML = '';
+                    data.forEach((dat) => {
+                        var da = JSON.parse(dat)
+                        addDisToSearch(da.id, da.name, da.tags)
+                    })
+                });
+        }
     }
 }
 
@@ -216,6 +238,8 @@ function addDisToSearch(id, name, tags) {
             //create options div
             var options = document.createElement('div')
             var deletebutton = document.createElement('button')
+            deletebutton.className = 'logout-button'
+            deletebutton.innerText = 'delete';
             //add the delete button
             options.append(deletebutton);
             deletebutton.addEventListener('click', () => {
@@ -584,7 +608,8 @@ var forumresults = document.getElementById('forumsresults');
 var forumtitle = document.getElementById('forumtitleshow');
 
 function loadforumposts(page = 1) {
-    fetch(`server.php?GetForums=${settings.forumResultsPerPage}&page=${page}`)
+    var resperpage = settings.forumResultsPerPage || 10
+    fetch(`server.php?GetForums=${resperpage}&page=${page}`)
         .then(res => res.json())
         .then(data => {
             if (data.status === 'success') {
@@ -769,7 +794,7 @@ function aproveforum(id, t) {
 }
 
 //in the create swtich between the two create modes
-function selectTab(selector) {
+function selectTab(selector,e) {
     var pTabs = document.querySelectorAll('.postTab');
     //hide allof the tabs
     pTabs.forEach((t) => {
@@ -777,6 +802,13 @@ function selectTab(selector) {
     })
     //set the one thats being selected to be visble
     document.getElementById(selector).style.display = 'block';
+    if (e) {
+        var pTabsButtons = document.getElementsByClassName('tabSwitchinBar')[0].querySelectorAll('button');
+        pTabsButtons.forEach((tbut) => {
+            tbut.className = ' ';
+        })
+        e.target.className = 'selectedtab';
+    }
 }
 
 
@@ -937,6 +969,7 @@ function onloadUser() {
                 .then(data => {
                     //set the title to the retrieved title
                     document.getElementById("disorderTitle").innerHTML = data.name;
+                    document.getElementById("titleforEntry").innerHTML = data.name + ' (OpenPsyche)';
                     //remanants from the old advanced css stuff, but should set the description element to the description
                     if (data.description.includes(divDefSep)) {
                         var disDescriptor = data.description.split(divDefSep)
@@ -989,6 +1022,7 @@ function onloadUser() {
                         //get the forum part of the forum get
                         var formuminfo = JSON.parse(data.message).forum;
                         forumtitle.innerText = formuminfo.FTitle;
+                        document.getElementById('ForumTitle').innerText = formuminfo.FTitle + ' (OpenPsyche)';
                         document.getElementById('forumdesc').innerText = formuminfo.FDesc;
                         document.getElementById('forumdate').innerText = formuminfo.DateMade;
                         document.getElementById('hiddneID').innerHTML = formuminfo.fP_Id;

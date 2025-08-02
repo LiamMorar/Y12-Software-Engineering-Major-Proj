@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <title>Admin Panel</title>
+    <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Create (OpenPsyche)</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -10,12 +10,16 @@
     <div class="forceLogin"></div>
     <canvas width="3000px" height="3000px" class="bgcanvas"></canvas>
     <main>
-        <div class="tabSwitchinBar"><button onclick="selectTab('addPost')">Post</button><button onclick="selectTab('addEntry')">Entry</button></div>
+        <div class="tabSwitchinBar"><button class="selectedtab" onclick="selectTab('addPost',event)">Post</button><button onclick="selectTab('addEntry',event)">Entry</button></div>
         <div id="addPost" class="postTab">
             <form id="addFormPost" method="POST" action="server.php">
                 <input type="text" name="postForumTitle" placeholder="Title" required>
-                <textarea type="text" name="postForumDesc" placeholder="Content goes here" required></textarea>
-                <input  type="checkbox" name="anonymouseMode" />
+                <textarea type="text" name="postForumDesc" placeholder="Content goes here" style="height:120px;resize:none;" required></textarea>
+                <div>
+                    <div style="display:flex;">
+                        <label for="anonymouseMode">Anonymouse Mode<input type="checkbox" id="anonymouseMode" name="anonymouseMode" /></label>
+                    </div>
+                </div>
                 <button type="submit" name="forumPost">Add Post</button>
             </form>
         </div>
